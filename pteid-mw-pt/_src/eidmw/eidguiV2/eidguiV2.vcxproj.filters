@@ -112,6 +112,9 @@
     <ClCompile Include="release\qrc_resources.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="cJSON_1_7_12.c">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="scripts\Constants.js">
@@ -288,6 +291,9 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="AttributeFactory.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cJSON_1_7_12.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>

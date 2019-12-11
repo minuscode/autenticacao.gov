@@ -88,7 +88,6 @@
 #include <openssl/pem.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
-#include <openssl/pkcs7.h>
 
 //stat
 #include <sys/types.h>

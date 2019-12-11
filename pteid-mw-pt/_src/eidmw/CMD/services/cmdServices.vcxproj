@@ -164,7 +164,7 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <Link>
-      <AdditionalDependencies>Qt5Core.lib;libeay32.lib;ssleay32.lib;pteidcommon.lib;pteidapplayer.lib;pteidlib.lib;WS2_32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;libcrypto.lib;libssl.lib;pteidcommon.lib;pteidapplayer.lib;pteidlib.lib;WS2_32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\..\_Binaries35\$(Platform)\VC9\$(Configuration)\qml-app\$(ProjectName).dll</OutputFile>
       <AdditionalLibraryDirectories>..\..\_Binaries35\$(Platform)\VC9\$(Configuration);$(PTEID_DIR_QT_5)\lib;$(PTEID_DIR_OPENSSL_098)\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -204,7 +204,7 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <Link>
-      <AdditionalDependencies>WS2_32.Lib;libeay32.lib;ssleay32.lib;pteidcommon.lib;pteidapplayer.lib;pteidlib.lib;Qt5Core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>WS2_32.Lib;libcrypto.lib;libssl.lib;pteidcommon.lib;pteidapplayer.lib;pteidlib.lib;Qt5Core.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\..\_Binaries35\$(Platform)\VC9\$(Configuration)\qml-app\$(ProjectName).dll</OutputFile>
       <AdditionalLibraryDirectories>..\..\_Binaries35\$(Platform)\VC9\$(Configuration);$(PTEID_DIR_QT_5_X64)\lib;$(PTEID_DIR_OPENSSL_098_X64)\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
