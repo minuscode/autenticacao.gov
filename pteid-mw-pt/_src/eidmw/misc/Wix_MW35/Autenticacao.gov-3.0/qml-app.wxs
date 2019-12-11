@@ -48,6 +48,13 @@
                 <Component Id="cmp29B33F5BB418719C19229E9CD898CF8D" Guid="{D149DF25-66EE-4D84-93BC-42052AC4CB23}">
                     <File Id="fil0B83CC8CFBA55D865EB2F2F8A25F2FD2" KeyPath="yes" Source="$(var.QMLDIR)\Qt5Network.dll" />
                 </Component>
+                <!-- The following OpenSSL 1.0.2 DLLs are needed for Qt5Network TLS code - our migration is still incomplete...  -->
+                <Component Id="cmpD3A3E703C58A4E0CB0E1AD5BC981B9AA" Guid="{D3A3E703-C58A-4E0C-B0E1-AD5BC981B9AA}" >
+                  <File Id="filessleay32" KeyPath="yes" Source="$(var.QMLDIR)\ssleay32.dll" />
+                </Component>
+                <Component Id="cmp00D03627EDE74542BA5DE511E4EB6EA7" Guid="{00D03627-EDE7-4542-BA5D-E511E4EB6EA7}" >
+                   <File Id="filelibeay" KeyPath="yes" Source="$(var.QMLDIR)\libeay32.dll" />
+                </Component>
                 <Component Id="cmpD2874F57A09578298FD4135DBCB261EA" Guid="{0A21E096-8517-4CAA-9F22-7CBD1D381F9D}">
                     <File Id="filC76A925FF74F6A508DBE63EF2425FF26" KeyPath="yes" Source="$(var.QMLDIR)\Qt5Qml.dll" />
                 </Component>
@@ -2652,6 +2659,8 @@
             <ComponentRef Id="cmp29B33F5BB418719C19229E9CD898CF8D" />
             <ComponentRef Id="cmpD2874F57A09578298FD4135DBCB261EA" />
             <ComponentRef Id="cmp2952216044FC2667143140F8BF324816" />
+            <ComponentRef Id="cmpD3A3E703C58A4E0CB0E1AD5BC981B9AA" />
+            <ComponentRef Id="cmp00D03627EDE74542BA5DE511E4EB6EA7" />
             <ComponentRef Id="cmp141140B14E16D8A8112000E5F09B4465" />
             <ComponentRef Id="cmp0C536BF0DBAAB2FDD79C894B214E3372" />
             <ComponentRef Id="cmp4303C1700AB276CD72A436DABBF14CAF" />
