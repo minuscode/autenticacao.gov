@@ -88,6 +88,7 @@
 #include <openssl/pem.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
+#include <openssl/pkcs7.h>
 
 //stat
 #include <sys/types.h>
@@ -256,6 +257,11 @@ namespace eIDMW
 
         std::basic_string<XMLCh> generateNodeID()
         {
+        	std::basic_string<XMLCh> id_buffer;
+        	id_buffer.append(XMLString::transcode("xades-"));
+        	
+#if _XSEC_VERSION_FULL >= 20000L
+        	//Inline implementation of generateId() from xml-security-c 1.7
         	unsigned char b[128];
         	XMLCh id[258];
         	unsigned int toGen = 20;
@@ -274,11 +280,12 @@ namespace eIDMW
         	}
 
         	id[1+(i*2)] = chNull;
-
-        	std::basic_string<XMLCh> id_buffer;
-        	id_buffer.append(XMLString::transcode("xades-"));
         	id_buffer.append(id);
+#else
+        	id_buffer.append(generateId(20));
 
+#endif        	
+  	
         	return id_buffer;
         }
 
