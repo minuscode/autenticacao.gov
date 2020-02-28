@@ -17,20 +17,25 @@ extern "C" {
 # endif
 # include <openssl/safestack.h>
 # include <openssl/x509.h>
+# include <openssl/opensslv.h>
 //# include <openssl/esserr.h>
 
-/* Already defined in header ts.h
+
+/*
 typedef struct ESS_issuer_serial ESS_ISSUER_SERIAL;
 typedef struct ESS_cert_id ESS_CERT_ID;
 typedef struct ESS_signing_cert ESS_SIGNING_CERT;
 
 DEFINE_STACK_OF(ESS_CERT_ID)
+*/
 
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
 typedef struct ESS_signing_cert_v2_st ESS_SIGNING_CERT_V2;
 typedef struct ESS_cert_id_v2_st ESS_CERT_ID_V2;
 
 DEFINE_STACK_OF(ESS_CERT_ID_V2)
-*/
+
+#endif
 
 ESS_ISSUER_SERIAL *ESS_ISSUER_SERIAL_new(void);
 void ESS_ISSUER_SERIAL_free(ESS_ISSUER_SERIAL *a);

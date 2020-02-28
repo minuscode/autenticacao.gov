@@ -203,7 +203,16 @@ ESS_SIGNING_CERT_V2 *ESS_SIGNING_CERT_V2_get(PKCS7_SIGNER_INFO *si)
     ASN1_TYPE *attr;
     const unsigned char *p;
 
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
+    int signing_certificatev2_nid = OBJ_create("1.2.840.113549.1.9.16.2.47",
+        "id-aa-signingCertificateV2",
+        "id-aa-signingCertificateV2");
+
+    attr = PKCS7_get_signed_attribute(si, signing_certificatev2_nid);
+#else
+
     attr = PKCS7_get_signed_attribute(si, NID_id_smime_aa_signingCertificateV2);
+#endif
     if (attr == NULL)
         return NULL;
     p = attr->value.sequence->data;
@@ -260,9 +269,21 @@ int ESS_SIGNING_CERT_V2_add(PKCS7_SIGNER_INFO *si,
 
     OPENSSL_free(pp);
     pp = NULL;
+
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
+    int signing_certificatev2_nid = OBJ_create("1.2.840.113549.1.9.16.2.47",
+        "id-aa-signingCertificateV2",
+        "id-aa-signingCertificateV2");
+
+    return PKCS7_add_signed_attribute(si,
+                                      signing_certificatev2_nid,
+                                      V_ASN1_SEQUENCE, seq);
+#else
+
     return PKCS7_add_signed_attribute(si,
                                       NID_id_smime_aa_signingCertificateV2,
                                       V_ASN1_SEQUENCE, seq);
+#endif
  err:
     ASN1_STRING_free(seq);
     OPENSSL_free(pp);
