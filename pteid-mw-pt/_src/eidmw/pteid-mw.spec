@@ -60,6 +60,7 @@ Requires:       pcsc-lite-ccid
 Requires:       qt5
 
 BuildRequires:  qt5-qtbase-devel
+BuildRequires:  qt5-qtbase-private-devel
 BuildRequires:  qt5-qtdeclarative-devel
 BuildRequires:  qt5-qtquickcontrols2-devel
 BuildRequires:  qt5-qttools-devel
@@ -69,8 +70,8 @@ BuildRequires:  libpng-devel
 
 BuildRequires:  xml-security-c-devel
 BuildRequires:  poppler-qt5-devel
-BuildRequires:  cairo-devel gcc gcc-c++ xerces-c-devel
-BuildRequires:  qt-devel pcsc-lite-ccid curl-devel
+BuildRequires:  gcc gcc-c++ xerces-c-devel
+BuildRequires:  qt-devel curl-devel
 
 BuildRequires:  openssl-devel
 
@@ -163,6 +164,7 @@ install -m 755 eidguiV2/eidguiV2 $RPM_BUILD_ROOT/usr/local/bin/eidguiV2
 install -m 755 -p bin/pteiddialogsQTsrv $RPM_BUILD_ROOT/usr/local/bin/pteiddialogsQTsrv
 install -m 644 -p eidguiV2/eidmw_en.qm $RPM_BUILD_ROOT/usr/local/bin/
 install -m 644 -p eidguiV2/eidmw_nl.qm $RPM_BUILD_ROOT/usr/local/bin/
+install -m 644 -p eidguiV2/fonts/lato/Lato-Regular.ttf $RPM_BUILD_ROOT/usr/local/bin/
 
 mkdir -p $RPM_BUILD_ROOT/usr/share/applications
 install -m 644 %{SOURCE1} $RPM_BUILD_ROOT/usr/share/applications
@@ -271,6 +273,7 @@ fi
 /usr/local/bin/pteiddialogsQTsrv
 /usr/local/bin/eidmw_en.qm
 /usr/local/bin/eidmw_nl.qm
+/usr/local/bin/Lato-Regular.ttf
 /usr/local/include/*
 /usr/share/applications/*
 /usr/share/icons/*
