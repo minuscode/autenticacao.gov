@@ -22,31 +22,15 @@ import eidguiV2 1.0
 PageSecurityPinCodesForm {
 
     Keys.onPressed: {
-        var index = protertyStackLayout.currentIndex
-        
-        var isOnAuthTab = index === 0 && propertyTabAuth.focus === true 
-        var isOnSignTab = index === 1 && propertyTabSign.focus === true 
-        var isOnAddrTab = index === 2 && propertyTabAddr.focus === true
-
-        var update = true
-        if (isOnAuthTab && !wasOnAuthTab) {
-            propertyTabAuth.forceActiveFocus()
-        } else if (isOnSignTab && !wasOnSignTab) {
-            propertyTabSign.forceActiveFocus()
-        } else if (isOnAddrTab && !wasOnAddrTab) {
-            propertyTabAddr.forceActiveFocus()
-        } else {
+        // if focus is already on the tab, exit to sub-menu
+        if (getCurrentTab().activeFocus === true) {
             Functions.detectBackKeys(event.key, Constants.MenuState.SUB_MENU)
-            wasOnAuthTab = false
-            wasOnSignTab = false
-            wasOnAddrTab = false
-            update = false
         }
-
-        if (update) {
-            wasOnAuthTab = isOnAuthTab
-            wasOnSignTab = isOnSignTab
-            wasOnAddrTab = isOnAddrTab
+        else {
+            var detectedBackKey = Functions.detectBackKeysTextEdit(event.key)
+            if (detectedBackKey) {
+                getCurrentTab().forceActiveFocus()
+            }
         }
     }
 
@@ -55,45 +39,27 @@ PageSecurityPinCodesForm {
 
         onSignalCardAccessError: {
             console.log("Security Pin Codes onSignalCardAccessError")
-     
+            var titlePopup = qsTranslate("Popup Card","STR_POPUP_ERROR")
+            var bodyPopup = ""
             if (error_code == GAPI.NoReaderFound) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_NO_CARD_READER")
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_NO_CARD_READER")
             }
             else if (error_code == GAPI.NoCardFound) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_NO_CARD")
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_NO_CARD")
             }
             else if (error_code == GAPI.SodCardReadError) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_SOD_VALIDATION_ERROR")
+                bodyPopup = qsTranslate("Popup Card","STR_SOD_VALIDATION_ERROR")
             }
             else if (error_code == GAPI.CardUserPinCancel) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_PIN_CANCELED")
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_PIN_CANCELED")
             }
-			else if (error_code == GAPI.CardPinTimeout) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_PIN_TIMEOUT")
+            else if (error_code == GAPI.CardPinTimeout) {
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_PIN_TIMEOUT")
             }
             else {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_CARD_ACCESS_ERROR")
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_CARD_ACCESS_ERROR")
             }
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
 
             if(error_code !== GAPI.CardUserPinCancel
                     && error_code !== GAPI.CardPinTimeout){
@@ -166,24 +132,18 @@ PageSecurityPinCodesForm {
 
         onSignalTestPinFinished: {
             if (triesLeft === 3) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_VERIFY")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_SUCESS")
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                var titlePopup = qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_VERIFY")
+                var bodyPopup = qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_SUCESS")
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }
             updateWithTriesLeft(triesLeft, pin)
         }
 
         onSignalModifyPinFinished: {
             if (triesLeft === 3) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_PIN_MODIFY")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_PIN_MODIFY_SUCESS")
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                var titlePopup = qsTranslate("Popup PIN","STR_PIN_MODIFY")
+                var bodyPopup = qsTranslate("Popup PIN","STR_PIN_MODIFY_SUCESS")
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }
             updateWithTriesLeft(triesLeft, pin)
         }
@@ -312,36 +272,25 @@ PageSecurityPinCodesForm {
             mainFormID.opacity = Constants.OPACITY_MAIN_FOCUS
             propertyBusyIndicator.running = false
 
+            var titlePopup = qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_VERIFY")
+            var bodyPopup = ""
             if (triesLeft === 3) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_VERIFY")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_SUCESS")
+                bodyPopup = qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_SUCESS")
             }
             else if (triesLeft === 0) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_VERIFY")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_BLOCKED")
+                bodyPopup = qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_BLOCKED")
             }
             else if (triesLeft === Constants.TRIES_LEFT_ERROR) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_VERIFY")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_ACCESS_ERROR")
+                bodyPopup = qsTranslate("Popup PIN","STR_POPUP_CARD_ACCESS_ERROR")
             }
             else {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_VERIFY")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_WRONG")
+                bodyPopup = qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_WRONG")
                         + " <br/><br/>"
                         + qsTranslate("Popup PIN","STR_POPUP_CARD_REMAIN")
                         + " " + triesLeft + " "
                         + qsTranslate("Popup PIN","STR_POPUP_CARD_TRIES")
             }
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
         }
         onRejected: {
             mainFormID.opacity = Constants.OPACITY_MAIN_FOCUS
@@ -564,37 +513,24 @@ PageSecurityPinCodesForm {
                 mainFormID.opacity = Constants.OPACITY_MAIN_FOCUS
                 propertyBusyIndicator.running = false
 
+                var titlePopup = qsTranslate("Popup PIN","STR_PIN_MODIFY")
                 if (triesLeft === 3) {
-                    mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_PIN_MODIFY")
-                    mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_PIN_MODIFY_SUCESS")
-
+                    bodyPopup = qsTranslate("Popup PIN","STR_PIN_MODIFY_SUCESS")
                 }
                 else if (triesLeft === 0) {
-                    mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_PIN_MODIFY")
-                    mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_BLOCKED")
+                    bodyPopup = qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_BLOCKED")
                 }
                 else if (triesLeft === Constants.TRIES_LEFT_ERROR) {
-                    mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_PIN_MODIFY")
-                    mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup PIN","STR_POPUP_CARD_ACCESS_ERROR")
+                    bodyPopup = qsTranslate("Popup PIN","STR_POPUP_CARD_ACCESS_ERROR")
                 }
                 else {
-                    mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup PIN","STR_PIN_MODIFY")
-                    mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                            qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_WRONG")
+                    bodyPopup = qsTranslate("Popup PIN","STR_POPUP_CARD_PIN_WRONG")
                             + " <br/><br/>"
                             + qsTranslate("Popup PIN","STR_POPUP_CARD_REMAIN")
                             + " " + triesLeft + " "
                             + qsTranslate("Popup PIN","STR_POPUP_CARD_TRIES")
                 }
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }else{
                 propertyBusyIndicator.running = false
                 textPinMsgConfirm.text = qsTranslate("Popup PIN","STR_PIN_NEW_CONFIRM")
@@ -773,4 +709,10 @@ PageSecurityPinCodesForm {
         }
         propertyBusyIndicator.running = false
     }
+
+    function getCurrentTab() {
+        var tabs = [propertyTabAuth, propertyTabSign, propertyTabAddr]
+        return tabs[protertyStackLayout.currentIndex]
+    }
+
 }

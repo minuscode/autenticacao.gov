@@ -25,6 +25,7 @@
 // Client for WS PADES/PDFSignature
 #include "pdfsignatureclient.h"
 #include <string>
+#include <codecvt>
 
 /*
   SCAPSignature implementation for eidguiV2
@@ -130,21 +131,34 @@ void ScapServices::executeSCAPWithCMDSignature(GAPI *parent, QString &savefilepa
     }
     if (successful == GAPI::ScapSucess) {
         parent->signCMDFinished(ERR_NONE);
-        parent->signalCloseCMDSucess();
+        emit parent->signalOpenFile();
         PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_CRITICAL, "ScapSignature",
                   "SCAP CMD ScapSucess");
     }
     else if (successful == GAPI::ScapTimeOutError) {
         qDebug() << "Error in SCAP service Timeout with CMD service!";
         parent->signalSCAPServiceTimeout();
-        parent->signCMDFinished(SCAP_SERVICE_ERROR_CODE);
+        parent->signCMDFinished(SCAP_GENERIC_ERROR_CODE);
         PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
                   "SCAP CMD Error. ScapTimeOutError");
+    }
+    else if (successful == GAPI::ScapClockError) {
+        qDebug() << "Error in SCAP service Clock Error with CMD service!";
+        parent->signCMDFinished(SCAP_CLOCK_ERROR_CODE);
+        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                  "SCAP CMD Error. ScapClockError");
+    }
+    else if (successful == GAPI::ScapSecretKeyError) {
+        qDebug() << "Error in SCAP service SecretKey Error with CMD service!";
+        parent->signalShowLoadAttrButton();
+        parent->signCMDFinished(SCAP_SECRETKEY_ERROR_CODE);
+        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                  "SCAP CMD Error. ScapSecretKeyError");
     }
     else {
         qDebug() << "Error in SCAP Signature with CMD service!";
         parent->signalSCAPServiceFail(successful);
-        parent->signCMDFinished(SCAP_SERVICE_ERROR_CODE);
+        parent->signCMDFinished(SCAP_GENERIC_ERROR_CODE);
         PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
                   "SCAP CMD Error. ScapPdfSignResult = %d",successful);
     }
@@ -224,6 +238,18 @@ void ScapServices::executeSCAPSignature(GAPI *parent, QString &inputPath, QStrin
                 parent->signalSCAPServiceTimeout();
                 PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
                           "SCAP CC ScapTimeOutError");
+            }
+            else if (successful == GAPI::ScapClockError) {
+                qDebug() << "Error in SCAP service Clock Error!";
+                parent->signalSCAPServiceFail(successful);
+                PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                          "SCAP CC ScapClockError");
+            }
+            else if (successful == GAPI::ScapSecretKeyError) {
+                qDebug() << "Error in SCAP service SecretKey Error!";
+                parent->signalSCAPServiceFail(successful);
+                PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                          "SCAP CC ScapSecretKeyError");
             }
             else {
                 qDebug() << "Error in SCAP Signature service!";
@@ -316,12 +342,20 @@ std::vector<ns3__AttributeSupplierType *> ScapServices::getAttributeSuppliers()
 	}
 	else if (m_proxyInfo.isManualConfig())
 	{
-		sp->proxy_host = strdup(m_proxyInfo.getProxyHost().toUtf8().constData());
-		sp->proxy_port = m_proxyInfo.getProxyPort().toLong();
+        long proxyinfo_port;
+        try {
+            proxyinfo_port = std::stol(m_proxyInfo.getProxyPort());
+        }
+        catch (...) {
+            eIDMW::PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature", "Error parsing proxy port to number value.");
+        }
+        sp->proxy_host = strdup(m_proxyInfo.getProxyHost().c_str());
+        sp->proxy_port = proxyinfo_port;
+        
 		if (m_proxyInfo.getProxyUser().size() > 0)
 		{
-			sp->proxy_userid = strdup(m_proxyInfo.getProxyUser().toUtf8().constData());
-			sp->proxy_passwd = strdup(m_proxyInfo.getProxyPwd().toUtf8().constData());
+            sp->proxy_userid = strdup(m_proxyInfo.getProxyUser().c_str());
+            sp->proxy_passwd = strdup(m_proxyInfo.getProxyPwd().c_str());
 		}
 	}
 

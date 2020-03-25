@@ -85,6 +85,14 @@ typedef enum {
 	DLG_PIN_ADDRESS,
 } DlgPinUsage;
 
+#ifdef WIN32
+typedef enum {
+	DLG_CMD_PROGRESS,
+	DLG_CMD_ERROR_MSG,
+	DLG_CMD_WARNING_MSG,
+} DlgCmdMsgType;
+#endif
+
 const unsigned char PIN_FLAG_DIGITS = 1;
 	
 #ifdef WIN32
@@ -103,7 +111,7 @@ typedef struct {
 	unsigned long long ulFlags;     // PIN_FLAG_DIGITS, ...
 } DlgPinInfo;	
 #endif
-	
+
 typedef enum {
 	DLG_ICON_NONE,
 	DLG_ICON_INFO,
@@ -218,6 +226,38 @@ DLGS_EXPORT DlgRet DlgDisplayPinpadInfo(DlgPinOperation operation,
 */
 DLGS_EXPORT void DlgClosePinpadInfo(unsigned long ulHandle);
 
+/************************************************************************************
+* CMD dialogs
+************************************************************************************/
+#ifdef WIN32
+/**
+* Show CMD dialog to obtain CMD PIN or OTP during signature.
+* - isValidateOtp: true if dialog should ask for OTP
+* - csOut: buffer to obtain PIN or OTP (depending on isValidateOtp)
+* - csInId: string with mobile number or document name/hash (depending on isValidateOtp)
+* - csUserName: buffer with the user name (used when obtaining PIN)
+*/
+
+DLGS_EXPORT DlgRet DlgAskInputCMD(bool isValidateOtp,
+	wchar_t *csOut, unsigned long ulOutBufferLen, wchar_t *csInId = NULL,
+	const wchar_t *csUserName = NULL, unsigned long ulUserNameBufferLen = 0, void *wndGeometry = 0);
+
+
+/**
+ * Show CMD dialog for output message or activity progress.
+ * - msgType: if it is dlg for activity progress or show warning/error msg
+ * - message: message to show
+ * Returns: DLG_CANCEL if user canceled activity
+ */
+DLGS_EXPORT DlgRet DlgCMDMessage(DlgCmdMsgType msgType, const wchar_t *message);
+
+/**
+* Close the CMD message dialog
+*/
+DLGS_EXPORT void DlgCloseCMDMessage();
+#endif
+
+/************************************************************************************/
 /**
 * Set the parent window of the dialogs.
 * The dialogs will be modal relative to the app window

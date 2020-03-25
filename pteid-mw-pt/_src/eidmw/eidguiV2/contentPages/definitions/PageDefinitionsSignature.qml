@@ -33,19 +33,12 @@ PageDefinitionsSignatureForm {
         onSignalCardDataChanged: {
             console.log("Definitions Signature --> Data Changed")
             //console.trace();
-            propertySigReasonText.text = propertySigReasonTextCustom.text = "{" + qsTr("STR_CUSTOM_SIGN_REASON") + "}"
-            propertySigSignedByText.text = propertySigSignedByTextCustom.text =qsTr("STR_CUSTOM_SIGN_BY") + ": "
 
             propertySigSignedByNameText.text = propertySigSignedByNameTextCustom.text =
                     gapi.getDataCardIdentifyValue(GAPI.Givenname) + " " +  gapi.getDataCardIdentifyValue(GAPI.Surname)
-
-
-            propertySigNumIdText.text = propertySigNumIdTextCustom.text = qsTranslate("GAPI","STR_DOCUMENT_NUMBER") + ": "
+            propertySigNumIdText.text = propertySigNumIdTextCustom.text = qsTranslate("GAPI","STR_NIC") + ": "
                     + gapi.getDataCardIdentifyValue(GAPI.Documentnum)
             propertySigLocationText.text = propertySigLocationTextCustom.text ="{" + qsTr("STR_CUSTOM_SIGN_LOCATION") + "}"
-
-            propertySigImg.source = "qrc:/images/logo_CC.png"
-            propertySigWaterImg.source = propertySigWaterImgCustom.source = "qrc:/images/pteid_signature_watermark.jpg"
 
             propertyBusyIndicator.running = false
             mainFormID.propertyPageLoader.propertyGeneralPopUp.close()
@@ -54,90 +47,51 @@ PageDefinitionsSignatureForm {
         }
         onSignalCardAccessError: {
             console.log("Definitions Signature --> onSignalCardAccessError")
+            var titlePopup = qsTranslate("Popup Card","STR_POPUP_ERROR") + controler.autoTr
+            var bodyPopup = ""
             if (error_code == GAPI.NoReaderFound) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_NO_CARD_READER") + controler.autoTr
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_NO_CARD_READER") + controler.autoTr
             }
             else if (error_code == GAPI.NoCardFound) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_NO_CARD") + controler.autoTr
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_NO_CARD") + controler.autoTr
             }
             else if (error_code == GAPI.SodCardReadError) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_SOD_VALIDATION_ERROR") + controler.autoTr
+                bodyPopup = qsTranslate("Popup Card","STR_SOD_VALIDATION_ERROR") + controler.autoTr
             }
             else if (error_code == GAPI.CardUserPinCancel) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_PIN_CANCELED")
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_PIN_CANCELED") + controler.autoTr
             }
-			else if (error_code == GAPI.CardPinTimeout) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_PIN_TIMEOUT")
+            else if (error_code == GAPI.CardPinTimeout) {
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_PIN_TIMEOUT") + controler.autoTr
             }
             else {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ERROR") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_CARD_ACCESS_ERROR") + controler.autoTr
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_CARD_ACCESS_ERROR") + controler.autoTr
             }
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-            mainFormID.propertyPageLoader.propertyGeneralPopUpRetSubMenu = true;
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
-
-            propertySigReasonText.text = propertySigReasonTextCustom.text = "{" + qsTr("STR_CUSTOM_SIGN_REASON") + "}"
-            propertySigSignedByText.text = propertySigSignedByTextCustom.text = qsTr("STR_CUSTOM_SIGN_BY") + ": "
-            propertySigSignedByNameText.text = propertySigSignedByNameTextCustom.text = ""
-            propertySigNumIdText.text = propertySigNumIdTextCustom.text = qsTranslate("GAPI","STR_DOCUMENT_NUMBER") + ": "
-            propertySigLocationText.text = propertySigLocationTextCustom.text = "{" + qsTr("STR_CUSTOM_SIGN_LOCATION") + "}"
-            propertySigImg.source = "qrc:/images/logo_CC.png"
-            propertySigWaterImg.source = propertySigWaterImgCustom.source = "qrc:/images/pteid_signature_watermark.jpg"
-
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, true)
+            clearFields()
             propertyBusyIndicator.running = false
         }
         onSignalCardChanged: {
             console.log("Definitions Signature --> onSignalCardChanged")
+            var titlePopup = qsTranslate("Popup Card","STR_POPUP_CARD_READ") + controler.autoTr
+            var bodyPopup = ""
+            var returnSubMenuWhenClosed = false
             if (error_code == GAPI.ET_CARD_REMOVED) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_CARD_READ") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_CARD_REMOVED") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpRetSubMenu = true;
-                propertySigReasonText.text = "{" + qsTr("STR_CUSTOM_SIGN_REASON") + "}"
-                propertySigSignedByText.text = qsTr("STR_CUSTOM_SIGN_BY") + ": "
-                propertySigSignedByNameText.text = ""
-                propertySigNumIdText.text = qsTranslate("GAPI","STR_DOCUMENT_NUMBER") + ": "
-                propertySigLocationText.text = "{" + qsTr("STR_CUSTOM_SIGN_LOCATION") + "}"
-                propertySigImg.source = "qrc:/images/logo_CC.png"
-                propertySigWaterImg.source = propertySigWaterImgCustom.source = "qrc:/images/pteid_signature_watermark.jpg"
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_CARD_REMOVED") + controler.autoTr
+                returnSubMenuWhenClosed = true;
+                clearFields()
             }
             else if (error_code == GAPI.ET_CARD_CHANGED) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_CARD_READ") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_CARD_CHANGED") + controler.autoTr
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_CARD_CHANGED") + controler.autoTr
                 propertyBusyIndicator.running = true
                 gapi.startCardReading()
             }
             else{
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_CARD_READ") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_CARD_READ_UNKNOWN") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpRetSubMenu = true;
+                bodyPopup = qsTranslate("Popup Card","STR_POPUP_CARD_READ_UNKNOWN") + controler.autoTr
+                returnSubMenuWhenClosed = true;
             }
 
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, returnSubMenuWhenClosed)
         }
     }
 
@@ -150,12 +104,9 @@ PageDefinitionsSignatureForm {
         }
         onDropped: {
             if(filesArray.length > 1){
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup File","STR_POPUP_FILE_UNIQUE")
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup File","STR_POPUP_FILE_UNIQUE_MULTI")
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                var titlePopup = qsTranslate("Popup File","STR_POPUP_FILE_UNIQUE")
+                var bodyPopup = qsTranslate("Popup File","STR_POPUP_FILE_UNIQUE_MULTI")
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }else{
                 /*console.log("Adding file: " + filesArray[0])*/
                 var path =  filesArray[0]
@@ -257,8 +208,9 @@ PageDefinitionsSignatureForm {
         console.log("Page Definitions Signature mainWindowCompleted")
         propertyBusyIndicator.running = true
         gapi.startCardReading()
-        propertySigDateText.text = propertySigDateTextCustom.text =getData()
-
+        propertySigDateText.text = propertySigDateTextCustom.text =
+                qsTranslate("PageServicesSign", "STR_SIGN_DATE") + ": " + getDate()
+        clearFields()
         if(gapi.getUseCustomSignature()){
             propertyRadioButtonDefault.checked = false
             propertyRadioButtonCustom.checked = true
@@ -279,7 +231,7 @@ PageDefinitionsSignatureForm {
         if(mainFormID.propertyPageLoader.propertyForceFocus)
             propertyRadioButtonDefault.forceActiveFocus()
     }
-    function getData(){
+    function getDate(){
         var time = Qt.formatDateTime(new Date(), "yy.MM.dd hh:mm:ss")
 
         function pad(number, length){
@@ -298,5 +250,18 @@ PageDefinitionsSignatureForm {
         time += " " + offset
 
         return time
+    }
+    function toggleRadio(element){
+        if(!element.checked)
+            element.checked = true
+    }
+    function clearFields(){
+        propertySigReasonText.text = propertySigReasonTextCustom.text = "{" + qsTr("STR_CUSTOM_SIGN_REASON") + "}"
+        propertySigSignedByText.text = propertySigSignedByTextCustom.text = qsTr("STR_CUSTOM_SIGN_BY") + ": "
+        propertySigSignedByNameText.text = propertySigSignedByNameTextCustom.text = ""
+        propertySigNumIdText.text = propertySigNumIdTextCustom.text = qsTranslate("GAPI","STR_NIC") + ": "
+        propertySigLocationText.text = propertySigLocationTextCustom.text = "{" + qsTr("STR_CUSTOM_SIGN_LOCATION") + "}"
+        propertySigImg.source = "qrc:/images/pdf_document_header.png"
+        propertySigWaterImg.source = propertySigWaterImgCustom.source = "qrc:/images/pteid_signature_watermark.jpg"
     }
 }

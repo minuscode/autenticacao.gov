@@ -106,6 +106,6 @@ namespace eIDMW
             h[1] = chLatin_a + toConvert - 10;
 
     }
-
-} // namespace eIDMW
 #endif
+
+}

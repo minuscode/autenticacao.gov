@@ -108,6 +108,7 @@
 						<Directory Id="CSHARP_SDK" Name="dotnet"/>
 					</Directory>
 					<Directory Id="WEBDIR" Name="web"/>
+					<Directory Id="FONTSDIR" Name="fonts"/>
 					<Directory Id="MINIDRIVERROOTFOLDER" Name="PTeID Minidriver"/>
 				</Directory>
 
@@ -201,6 +202,12 @@
 				</Component>
 			</DirectoryRef>
 
+			<DirectoryRef Id="FONTSDIR">
+				<Component Id="LatoFont" Guid="{d2c0624a-1839-11ea-8d71-362b9e155667}">
+					<File Source="..\..\..\eidguiV2\fonts\lato\Lato-Regular.ttf" KeyPath="yes" />
+				</Component>
+			</DirectoryRef>
+
 			<DirectoryRef Id="DIRECTORYCACHE">
 				<Component Id="DirectoryCache" Guid="{7CAEB639-7068-4084-B422-D7B5E55D0FBC}" KeyPath="yes">
 					<CreateFolder>
@@ -265,13 +272,15 @@
 					<File Source="$(var.PTEID_BUILD_FOLDER_X86)pteidcardlayer.dll" />
 					<File Source="$(var.PTEID_BUILD_FOLDER_X86)pteidcommon.dll" />
 					<File Source="$(var.PTEID_BUILD_FOLDER_X86)pteidDlgsWin32.dll" />
+					<File Source="$(var.PTEID_BUILD_FOLDER_X86)cmdServices.dll" />
+					<File Source="$(var.PTEID_BUILD_FOLDER_X86)cmdKsp.dll" />
 				</Component>
 
 				<Component Win64="no" Id="libeay32A" Guid="{3AAFC0CD-FDCB-4F7B-9EB7-7B2E31477691}" SharedDllRefCount="yes">
-					<File Source="$(env.PTEID_DIR_OPENSSL_098)\bin\libcrypto-1_1.dll" />
+					<File Source="$(env.PTEID_DIR_OPENSSL_098)\bin\libeay32.dll" KeyPath="yes"/>
 				</Component>
 				<Component Win64="no" Id="ssleay32A" Guid="{6DBB15A3-6EA1-4869-B133-7D8E1321B56C}" SharedDllRefCount="yes">
-					<File Source="$(env.PTEID_DIR_OPENSSL_098)\bin\libssl-1_1.dll" />
+					<File Source="$(env.PTEID_DIR_OPENSSL_098)\bin\ssleay32.dll" KeyPath="yes"/>
 				</Component>
 
 				<!-- Our heavily stripped-down version of poppler with PDF Signature Support -->
@@ -280,7 +289,7 @@
       </Component>
 
 				<Component Win64="no" Id="Runtime35ThirdPartyXerces" Guid="{B1EBF9C5-1A6F-44d4-AA80-DE55AAF052FE}" SharedDllRefCount="yes">
-          			<File Source="$(env.PTEID_DIR_XERCES_31)\bin\xerces-c_3_2.dll" KeyPath="yes"/>
+          			<File Source="$(env.PTEID_DIR_XERCES_31)\Build\Win32\VC12\Release\xerces-c_3_1.dll" KeyPath="yes"/>
 				</Component>
                 
                 <Component Win64="no" Id="Libpng" Guid="7763EFEE-ACE6-438E-96D3-4A2126102895" SharedDllRefCount="yes">
@@ -305,7 +314,7 @@
                 </Component>
 
 				<Component Win64="no" Id="XMLSecurity" Guid="EF7A30DC-47CC-4385-832A-8E871EF69F65" SharedDllRefCount="yes">
-          			<File Source="$(env.PTEID_XMLSECURITY)\Build\Win32\VC12\Release Minimal\xsec_2_0.dll" KeyPath="yes" />
+          			<File Source="$(env.PTEID_XMLSECURITY)\Build\Win32\VC10\Release No Xalan\xsec_1_7.dll" KeyPath="yes" />
 				</Component>
 
 				<Component Win64="no" Id="pkcs11" Guid="D54164C0-795D-4B2D-96C6-C8E395100896" SharedDllRefCount="yes">
@@ -324,13 +333,15 @@
             <File Id="pteidlibCS_Wrapper_64.dll" Source="$(var.PTEID_BUILD_FOLDER_X64)pteidlibCS_Wrapper.dll" />
 			      <File Id="pteidcommon_64.dll"    Source="$(var.PTEID_BUILD_FOLDER_X64)pteidcommon.dll" />
 			      <File Id="pteidDlgsWin32_64.dll" Source="$(var.PTEID_BUILD_FOLDER_X64)pteidDlgsWin32.dll" />
+			      <File Id="cmdServices_64.dll" Source="$(var.PTEID_BUILD_FOLDER_X64)cmdServices.dll" />
+            <File Id="cmdKsp_64.dll" Source="$(var.PTEID_BUILD_FOLDER_X64)cmdKsp.dll" />
 				</Component>
 
 				<Component Id="libeay32A_64" Guid="{A3F78E8A-9C48-49B6-9823-0C6014134C31}" SharedDllRefCount="yes">
-					<File Id="libeay_64.dll" Source="$(env.PTEID_DIR_OPENSSL_098_X64)\bin\libcrypto-1_1-x64.dll" />
+					<File Id="libeay_64.dll" Source="$(env.PTEID_DIR_OPENSSL_098_X64)\bin\libeay32.dll" KeyPath="yes"/>
 				</Component>
 				<Component Id="ssleay32A_64" Guid="{A50E4162-B721-44C0-B2A1-D13ED7DE924C}" SharedDllRefCount="yes">
-					<File Id="ssleay_64.dll" Source="$(env.PTEID_DIR_OPENSSL_098_X64)\bin\libssl-1_1-x64.dll" />
+					<File Id="ssleay_64.dll" Source="$(env.PTEID_DIR_OPENSSL_098_X64)\bin\ssleay32.dll" KeyPath="yes"/>
 				</Component>
 
 				<Component Id="pkcs11_64" Guid="{3C4751D6-D92C-40ab-8FA5-3A1DF1D927EA}" SharedDllRefCount="yes" Win64="yes">
@@ -338,7 +349,7 @@
 				</Component>
 
 				<Component Id="XMLSecurity_64" Guid="EF7A30DC-47CC-4385-832A-8E871EF69F66" SharedDllRefCount="yes">
-          			<File Id="xsec_2_0_64.dll" Source="$(env.PTEID_XMLSECURITY)\Build\x64\VC12\Release Minimal\xsec_2_0.dll" KeyPath="yes" />
+          			<File Id="xsec_1_6_64.dll" Source="$(env.PTEID_XMLSECURITY)\Build\x64\VC10\Release No Xalan\xsec_1_7.dll" KeyPath="yes" />
 				</Component>
 
 				<!-- Our heavily stripped-down version of poppler with PDF Signature Support -->
@@ -351,7 +362,7 @@
         </Component>
 
 				<Component Id="Runtime35ThirdPartyXerces_64" Guid="{B1EBF9C5-1A6F-44d4-AA80-DE55AAF052FF}" SharedDllRefCount="yes">
-         			 <File Id="xercesc_3_2_64.dll" Source="$(env.PTEID_DIR_XERCES_31_X64)\bin\xerces-c_3_2.dll" KeyPath="yes"/>
+         			 <File Id="xercesc_3_1_64.dll" Source="$(env.PTEID_DIR_XERCES_31_X64)\Build\Win64\VC12\Release\xerces-c_3_1.dll" KeyPath="yes"/>
 				</Component>
                 
                 <Component Id="Libpng_64" Guid="{88D3D0A3-24C6-4AC7-AC2C-F6F8FF1BABA8}" SharedDllRefCount="yes">
@@ -487,6 +498,7 @@
 							<RegistryValue Type="integer" Name="automatic_cardreading" Value="1"/>
 							<RegistryValue Type="integer" Name="cardreader" Value="0"/>
 							<RegistryValue Type="integer" Name="registrate_certificate" Value="1"/>
+							<RegistryValue Type="integer" Name="ask_register_cmd_cert" Value="1"/>
 						</RegistryKey>
 					</RegistryKey>
 					
@@ -540,6 +552,7 @@
 				<ComponentRef Id="CrlDir"/>
 				<ComponentRef Id="HttpDir"/>
 				<ComponentRef Id="OAuthPages"/>
+				<ComponentRef Id="LatoFont"/>
 
 				<ComponentRef Id="DirectoryCache"/>
 				<ComponentRef Id="License"/>
@@ -621,6 +634,8 @@
 	      <Binary Id="CleanMdrvKeys" SourceFile="$(var.PTEID_BUILD_FOLDER_X64)clean_mdrv_keys.exe" />
 	    <?endif?>
 
+	    <Binary SourceFile="$(var.PTEID_BUILD_FOLDER_X86)\cmdKspConfig.exe" Id="cmdKspConfig"/>
+
 		<CustomAction Id="CleanMinidriverKeys"
 			BinaryKey="CleanMdrvKeys"
 			ExeCommand="clean_mdrv_keys.exe"
@@ -658,6 +673,11 @@
 					
 					/>
 
+
+			<CustomAction BinaryKey="cmdKspConfig" Execute="deferred" Return="check" Impersonate="no" ExeCommand="-register" Id="KSPRegister"/>
+			<CustomAction BinaryKey="cmdKspConfig" Execute="deferred" Return="check" Impersonate="no" ExeCommand="-unregister" Id="KSPUnregister"/>
+			<CustomAction BinaryKey="cmdKspConfig" Execute="deferred" Return="check" Impersonate="yes" ExeCommand="-removeCerts" Id="KSPRemoveCmdCerts"/>
+
 			<InstallExecuteSequence>
 				<Custom Action="SetARPINSTALLLOCATION" After="InstallValidate"></Custom>
 
@@ -665,7 +685,9 @@
 	      <Custom Action="SetCacheDirHidden"  After="InstallFiles">NOT Installed</Custom>
 	      <Custom Action="CleanMinidriverKeys" After="RemoveRegistryValues">NOT Installed</Custom>
 	      <Custom Action="MinidriverManualInstall" After="InstallFiles"> NOT Installed and VersionNT >= 601</Custom>
-
+	      <Custom Action="KSPRegister" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
+	      <Custom Action="KSPUnregister" Before="InstallFinalize">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+	      <Custom Action="KSPRemoveCmdCerts" Before="InstallFinalize">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
 		<ScheduleReboot After="InstallFinalize">NOT Installed</ScheduleReboot>
 	</InstallExecuteSequence>
 

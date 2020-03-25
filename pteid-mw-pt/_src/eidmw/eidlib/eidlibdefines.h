@@ -155,6 +155,7 @@ enum PTEID_Param
 	PTEID_PARAM_GUITOOL_REMOVECERTIF,	//number; 0=no, 1=yes(default)
 	PTEID_PARAM_GUITOOL_FILESAVE,		//string; path to directory where to save eid/xml/csv file
 	PTEID_PARAM_GUITOOL_STARTUPDATE,	//number; 0=no, 1=yes(default)
+	PTEID_PARAM_GUITOOL_ASKREGCMDCERT,	//number; 0=no, 1=yes(default)
 
 	//XSIGN
 	PTEID_PARAM_XSIGN_TSAURL,			//string;
@@ -166,6 +167,8 @@ enum PTEID_Param
     PTEID_PARAM_GUITOOL_SHOWNOTIFICATION,   //number; 0=no(default), 1=yes
     PTEID_PARAM_GUITOOL_USECUSTOMSIGN,      //number; 0=no(default), 1=yes
     PTEID_PARAM_GUITOOL_SHOWANIMATIONS,     //number; 0=no(default), 1=yes
+    PTEID_PARAM_GUITOOL_USESYSTEMSCALE,     //number; 0=100%(default), 1=125%, 2=150%,... (25% increments)
+    PTEID_PARAM_GUITOOL_APPLICATIONSCALE,   //number; 0=100%(default), 1=125%, 2=150%,... (25% increments)
     PTEID_PARAM_GUITOOL_GRAPHICSACCEL,      //number; 0=no(default), 1=yes
     PTEID_PARAM_GUITOOL_SHOWSTARTUPHELP,    //number; 0=no(default), 1=yes
 
@@ -174,7 +177,8 @@ enum PTEID_Param
 
 	//AUTOUPDATES
     PTEID_PARAM_AUTOUPDATES_URL,        //string
-    PTEID_PARAM_AUTOUPDATES_VERIFY_URL  //string
+    PTEID_PARAM_AUTOUPDATES_VERIFY_URL, //string
+    PTEID_PARAM_AUTOUPDATES_CERTS_URL   //string
 
 };
 

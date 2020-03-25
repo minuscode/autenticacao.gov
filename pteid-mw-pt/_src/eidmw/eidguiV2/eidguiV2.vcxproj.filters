@@ -32,9 +32,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="proxyinfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="filesavedialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -56,6 +53,9 @@
     <ClCompile Include="scapsignature.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="autoUpdates.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="stdsoap2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -75,6 +75,9 @@
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_appcontroller.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_autoUpdates.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_singleapplication.cpp">
@@ -110,9 +113,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="release\qrc_resources.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cJSON_1_7_12.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -273,6 +273,9 @@
     <CustomBuild Include="singleapplication.h">
       <Filter>Generated Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="autoUpdates.h">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="eidguiV2.rc" />
@@ -281,7 +284,7 @@
     <ClInclude Include="SCAP-services-v3\SCAPAttributeClientServiceBindingProxy.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="credentials.h">
+    <ClInclude Include="cJSON_1_7_12.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="cJSON_1_7_12.h">
@@ -291,9 +294,6 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="AttributeFactory.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cJSON_1_7_12.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>

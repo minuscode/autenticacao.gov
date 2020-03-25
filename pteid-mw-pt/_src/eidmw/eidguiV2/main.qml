@@ -1,6 +1,6 @@
 /*-****************************************************************************
 
- * Copyright (C) 2017-2019 Adriano Campos - <adrianoribeirocampos@gmail.com>
+ * Copyright (C) 2017-2020 Adriano Campos - <adrianoribeirocampos@gmail.com>
  * Copyright (C) 2017 André Guerreiro - <aguerreiro1985@gmail.com>
  * Copyright (C) 2019 Miguel Figueira - <miguelblcfigueira@gmail.com>
  * Copyright (C) 2019 João Pinheiro - <joao.pinheiro@caixamagica.pt>
@@ -19,6 +19,8 @@ import QtQuick.Window 2.2
 import "scripts/Functions.js" as Functions
 import "scripts/Constants.js" as Constants
 
+import "components/" as Components
+
 //Import C++ defined enums
 import eidguiV2 1.0
 
@@ -34,8 +36,12 @@ Window {
 
     title: "Autenticação.Gov"
 
-    FontLoader { id: lato; source: "qrc:/fonts/lato/Lato-Regular.ttf" }
-
+    FontLoader { 
+        id: lato;
+        name: "Lato" // This avoids printing error on application start
+        source: controler.getFontFile("lato")
+     }
+    
     onWidthChanged: {
         console.log("Resizing app width: " + width + "height" + height)
         mainFormID.propertyMainMenuView.width = Functions.getMainMenuWidth(width)
@@ -69,31 +75,69 @@ Window {
             mainWindow.activateWindow();
         }
         onSignalLanguageChangedError: {
-            mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                    "Erro / Error"
-            mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                    "Erro na leitura dos idiomas. Por favor, reinstale a aplicação <br/>
+            var titlePopup = "Erro / Error"
+            var bodyPopup = "Erro na leitura dos idiomas. Por favor, reinstale a aplicação <br/>
 Load language error. Please reinstall the application"
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
         }
 
-        property var autoUpdate: true
+        property var autoUpdateApp: true
+        property var autoUpdateCerts: true
+        property var isAutoUpdateAlreadyDetected: false
+
+        onSignalAutoUpdateSuccess: {
+            var titlePopup = qsTranslate("PageDefinitionsUpdates","STR_UPDATED_CERTIFICATES")
+            var bodyPopup = qsTranslate("Popup Card","STR_POPUP_RESTART_APP")
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
+        }
         onSignalAutoUpdateAvailable: {
-            if(autoUpdate){
-                console.log("There is an update available.")
-                autoUpdate = false
-                autoUpdateDialog.update_release_notes = release_notes
-                autoUpdateDialog.update_installed_version = installed_version
-                autoUpdateDialog.update_remote_version = remote_version
-                autoUpdateDialog.open()
-                labelTextTitle.forceActiveFocus();
+            // Do not show dialog when update page is open
+            if(mainFormID.propertyMainMenuBottomListView.currentIndex != 0
+                    && mainFormID.propertySubMenuListView.currentIndex != 5){
+                if(updateType == GAPI.AutoUpdateApp){
+                    if(autoUpdateApp){
+                        autoUpdateDialog.update_release_notes = release_notes
+                        autoUpdateDialog.update_installed_version = installed_version
+                        autoUpdateDialog.update_remote_version = remote_version
+                        autoUpdateDialog.update_type = updateType
+                        isAutoUpdateAlreadyDetected = true
+                        autoUpdateApp = false
+                        autoUpdateDialog.open()
+                        labelTextTitle.forceActiveFocus();
+                    }
+                }
+                else {
+                    if(autoUpdateCerts && !isAutoUpdateAlreadyDetected){
+                        autoUpdateDialog.update_certs_list = certs_list
+                        autoUpdateDialog.update_type = updateType
+                        isAutoUpdateAlreadyDetected = true
+                        autoUpdateCerts = false
+                        autoUpdateDialog.open()
+                        labelTextTitle.forceActiveFocus();
+                    }
+                }
             }
         }
+
         onSignalAutoUpdateFail: {
-            if(autoUpdate){
-                console.log("No updates or startup auto update failed.")
-                autoUpdate = false
+
+            console.log("No updates or startup auto update failed.")
+            if(updateType == GAPI.AutoUpdateApp){
+                console.log("No App updates or startup auto update failed.")
+                if(autoUpdateApp){
+                    autoUpdateApp = false
+                }
+            } else {
+                console.log("No Certs updates or startup auto update failed.")
+                if(autoUpdateCerts) {
+                    autoUpdateCerts = false
+                }
+                if (error_code == GAPI.InstallFailed){
+                    var titlePopup = qsTranslate("PageDefinitionsUpdates","STR_UPDATE_CERTIFICATES_FAIL")
+                    var bodyPopup = qsTranslate("PageDefinitionsUpdates","STR_UPDATE_INSTALL_FAIL")
+                            + "<br><br>" + qsTranslate("PageDefinitionsUpdates","STR_CONTACT_SUPPORT")
+                    mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
+                }
             }
         }
     }
@@ -102,40 +146,29 @@ Load language error. Please reinstall the application"
         target: gapi
         onSignalGenericError: {
             console.log("Signal onSignalGenericError")
-            mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                    qsTranslate("Popup Card","STR_POPUP_ERROR")
-            mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                    qsTranslate("Popup Card","STR_GENERIC_ERROR_MSG") + "<br/><br/>" +
-                    qsTranslate("Popup Card","STR_ERROR_CODE") + error_code
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+            var titlePopup = qsTranslate("Popup Card","STR_POPUP_ERROR")
+            var bodyPopup = qsTranslate("Popup Card","STR_GENERIC_ERROR_MSG") + "<br/><br/>" +
+                            qsTranslate("Popup Card","STR_ERROR_CODE") + error_code
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
         }
         onSignalImportCertificatesFail: {
             console.log("Signal onSignalImportCertificatesFail")
-            mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                    qsTranslate("Popup Card","STR_POPUP_ERROR")
-            mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                    qsTranslate("Popup Card","STR_CERTIFICATES_IMPORT_ERROR_MSG")
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+            var titlePopup = qsTranslate("Popup Card","STR_POPUP_ERROR")
+            var bodyPopup = qsTranslate("Popup Card","STR_CERTIFICATES_IMPORT_ERROR_MSG")
+                + "<br/><br/>" + qsTranslate("Popup Card","STR_GENERIC_ERROR_MSG")
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
         }
         onSignalRemoveCertificatesFail: {
             console.log("Signal onSignalRemoveCertificatesFail")
-            mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                    qsTranslate("Popup Card","STR_POPUP_ERROR")
-            mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                    qsTranslate("Popup Card","STR_CERTIFICATES_REMOVE_ERROR_MSG")
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+            var titlePopup = qsTranslate("Popup Card","STR_POPUP_ERROR")
+            var bodyPopup = qsTranslate("Popup Card","STR_CERTIFICATES_REMOVE_ERROR_MSG")
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
         }
         onSignalLanguageChangedError: {
-            mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                    "Erro / Error"
-            mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                    "Erro na leitura dos idiomas. Por favor, reinstale a aplicação <br/>
+            var titlePopup = "Erro / Error"
+            var bodyPopup = "Erro na leitura dos idiomas. Por favor, reinstale a aplicação <br/>
 Load language error. Please reinstall the application"
-            mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true
-            mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
         }
 
         onSignalReaderContext: {
@@ -150,14 +183,19 @@ Load language error. Please reinstall the application"
             readerContext.open()
         }
     }
+
     Dialog {
         property string update_release_notes: ""
         property string update_installed_version: ""
         property string update_remote_version: ""
+        property string update_certs_list: ""
+        property int update_type: 0
+        property alias propertyTextAutoupdate: textAutoupdate.text
+        property alias propertyOpenTextAutoupdate: openTextAutoupdate.text
 
         id: autoUpdateDialog
-        width: 400
-        height: 200
+        width: 500
+        height: 300
         font.family: lato.name
         // Center dialog in the main view
         x: parent.width * 0.5 - width * 0.5
@@ -173,6 +211,7 @@ Load language error. Please reinstall the application"
             bottomPadding: 0
             font.bold: activeFocus
             font.pixelSize: Constants.SIZE_TEXT_MAIN_MENU
+            font.family: lato.name
             color: Constants.COLOR_MAIN_BLUE
             KeyNavigation.tab: textAutoupdate
             KeyNavigation.down: textAutoupdate
@@ -190,13 +229,37 @@ Load language error. Please reinstall the application"
                 anchors.horizontalCenter: parent.horizontalCenter
                 Text {
                     id: textAutoupdate
-                    text: qsTr("STR_AUTOUPDATE_TEXT") + "\n\n"
-                        + qsTr("STR_DISABLE_AUTOUPDATE_INFO")
                     verticalAlignment: Text.AlignVCenter
                     anchors.verticalCenter: parent.verticalCenter
                     font.pixelSize: activeFocus ? Constants.SIZE_TEXT_LABEL_FOCUS : Constants.SIZE_TEXT_LABEL
                     font.bold: activeFocus
                     font.family: lato.name
+                    color: Constants.COLOR_TEXT_LABEL
+                    height: parent.height
+                    width: parent.width
+                    anchors.bottom: parent.bottom
+                    wrapMode: Text.WordWrap
+                    KeyNavigation.tab: buttonCancelUpdate
+                    KeyNavigation.down: buttonCancelUpdate
+                    KeyNavigation.up: labelTextTitle
+                    KeyNavigation.backtab: labelTextTitle
+                }
+            }
+            Item {
+                id: rectOpenMessage
+                width: parent.width
+                height: 50
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: rectMessage.bottom
+                Text {
+                    id: openTextAutoupdate
+                    verticalAlignment: Text.AlignVCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                    font.pixelSize: activeFocus ? Constants.SIZE_TEXT_LABEL_FOCUS : Constants.SIZE_TEXT_LABEL
+                    font.bold: activeFocus
+                    font.family: lato.name
+                    text: qsTranslate("PageDefinitionsUpdates","STR_DISABLE_AUTOUPDATE_INFO")
                     color: Constants.COLOR_TEXT_LABEL
                     height: parent.height
                     width: parent.width
@@ -218,6 +281,7 @@ Load language error. Please reinstall the application"
             anchors.left: parent.left
             text: qsTranslate("Popup File", "STR_POPUP_FILE_CANCEL")
             font.capitalization: Font.MixedCase
+            font.family: lato.name
             KeyNavigation.tab: buttonInstallUpdate
             KeyNavigation.right: buttonInstallUpdate
             KeyNavigation.up: textAutoupdate
@@ -225,7 +289,12 @@ Load language error. Please reinstall the application"
             highlighted: activeFocus
             onClicked: {
                 autoUpdateDialog.close()
+                if(Qt.platform.os === "windows" && controler.getAskToRegisterCmdCertValue()){
+                    mainFormID.propertyCmdDialog.open(GAPI.AskToRegisterCert)
+                }
             }
+            Keys.onEnterPressed: clicked()
+            Keys.onReturnPressed: clicked()
         }
         Button {
             id: buttonInstallUpdate
@@ -236,6 +305,7 @@ Load language error. Please reinstall the application"
             anchors.right: parent.right
             text: qsTr("STR_UPDATE_INSTALL_BUTTON")
             font.capitalization: Font.MixedCase
+            font.family: lato.name
             KeyNavigation.tab: labelTextTitle
             KeyNavigation.right: labelTextTitle
             KeyNavigation.left: buttonCancelUpdate
@@ -252,13 +322,37 @@ Load language error. Please reinstall the application"
                 mainFormID.propertySubMenuListView.forceActiveFocus()
 
                 //re-emit signal for PageDefinitionsUpdatesForm
-                controler.signalAutoUpdateAvailable(autoUpdateDialog.update_release_notes,
-                                                    autoUpdateDialog.update_installed_version,
-                                                    autoUpdateDialog.update_remote_version)
+                if(autoUpdateDialog.update_type == GAPI.AutoUpdateApp){
+                    controler.signalAutoUpdateAvailable(GAPI.AutoUpdateApp,
+                                                        autoUpdateDialog.update_release_notes,
+                                                        autoUpdateDialog.update_installed_version,
+                                                        autoUpdateDialog.update_remote_version,
+                                                        "")
+                }
+                if(autoUpdateDialog.update_type == GAPI.AutoUpdateCerts){
+                    controler.signalAutoUpdateAvailable(GAPI.AutoUpdateCerts,
+                                                        "",
+                                                        "",
+                                                        "",
+                                                        autoUpdateDialog.update_certs_list)
+                }
+
             }
+            Keys.onEnterPressed: clicked()
+            Keys.onReturnPressed: clicked()
         }
         onRejected: {
             autoUpdateDialog.open()
+        }
+        onOpened: {
+            console.log("GAPI.AutoUpdateApp = " + GAPI.AutoUpdateApp)
+            if(autoUpdateDialog.update_type == GAPI.AutoUpdateApp) {
+                propertyTextAutoupdate = qsTranslate("PageDefinitionsUpdates","STR_AUTOUPDATE_TEXT")
+                + " " + qsTranslate("PageDefinitionsUpdates","STR_AUTOUPDATE_OPEN_TEXT")
+            } else {
+                propertyTextAutoupdate = qsTranslate("PageDefinitionsUpdates","STR_AUTOUPDATE_CERTS_TEXT")
+                + " " + qsTranslate("PageDefinitionsUpdates","STR_AUTOUPDATE_OPEN_TEXT")
+            }
         }
     }
 
@@ -284,6 +378,7 @@ Load language error. Please reinstall the application"
             bottomPadding: 0
             font.bold: true
             font.pixelSize: Constants.SIZE_TEXT_MAIN_MENU
+            font.family: lato.name
             color: Constants.COLOR_MAIN_BLUE
         }
         Item {
@@ -458,9 +553,8 @@ Load language error. Please reinstall the application"
                     onClicked: {
                         unsaved_notes_dialog.reject()
                     }
-                    Keys.onReturnPressed: {
-                        unsaved_notes_dialog.reject()
-                    }
+                    Keys.onEnterPressed: clicked()
+                    Keys.onReturnPressed: clicked()
                 }
                 Button {
                     id: continueButton
@@ -482,9 +576,8 @@ Load language error. Please reinstall the application"
                     onClicked: {
                         unsaved_notes_dialog.accept()
                     }
-                    Keys.onReturnPressed: {
-                        unsaved_notes_dialog.accept()
-                    }
+                    Keys.onEnterPressed: clicked()
+                    Keys.onReturnPressed: clicked()
                 }
             }
         }
@@ -928,7 +1021,8 @@ Load language error. Please reinstall the application"
             }else{
                 mainFormID.propertyMainMenuView.width = mainWindow.width
             }
-            mainFormID.propertyImageLogoBottom.forceActiveFocus()
+            if (!controler.getAskToRegisterCmdCertValue())
+                mainFormID.propertyImageLogoBottom.forceActiveFocus()
 
             // Do not select any option
             mainFormID.propertyMainMenuListView.currentIndex = -1
@@ -1048,6 +1142,8 @@ Load language error. Please reinstall the application"
                         mainFormID.propertyMainMenuListView.currentIndex++
                     }
                 }
+                Keys.onEnterPressed: clicked()
+                Keys.onReturnPressed: clicked()
                 onClicked: {
                     console.log(index)
                     mainMenuPressed(index)
@@ -1216,6 +1312,8 @@ Load language error. Please reinstall the application"
                     }
 
                 }
+                Keys.onEnterPressed: clicked()
+                Keys.onReturnPressed: clicked()
                 onFocusChanged: {
                     if(focus === true){
                         mainFormID.propertyMainMenuListView.currentIndex = -1
@@ -1322,6 +1420,8 @@ Load language error. Please reinstall the application"
                 Keys.onBacktabPressed: {
                     moveSelectionUp()
                 }
+                Keys.onEnterPressed: clicked()
+                Keys.onReturnPressed: clicked()
                 onFocusChanged: {
                     if(focus === true){
                         mainFormID.propertySubMenuListView.currentIndex = index
@@ -1380,13 +1480,45 @@ Load language error. Please reinstall the application"
             }
         }
     }
+    Item {
+        width:  mainFormID.propertyMainMenuView.width
+        height: Constants.SIZE_TEXT_LABEL
+        anchors {
+            bottom: parent.bottom
+            left: parent.left
+            bottomMargin: Constants.SIZE_ROW_V_SPACE
+        }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.pixelSize: Constants.SIZE_TEXT_LABEL
+            font.bold: mouseAreaVersionLabel.containsMouse
+            font.family: lato.name
+            color: Constants.COLOR_MAIN_DARK_GRAY
+            text: qsTranslate("PageHelpAbout","STR_HELP_APP_VERSION") + controler.autoTr
+                    + " " + controler.getAppVersion().split("-")[0]
+            MouseArea {
+                id: mouseAreaVersionLabel
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked:{
+                    mainMenuBottomPressed(1)
+                    subMenuPressed(2, mainFormID.propertyMainMenuBottomListView.model.get(1).subdata.get(2).url)
+                }
+                z:1 // MouseArea above buttons
+            }
+        }
+    }
 
     Component.onCompleted: {
         console.log("Window mainWindow Completed")
         mainFormID.propertShowAnimation = controler.isAnimationsEnabled()
         gapi.setAppAsDlgParent()
-        if(controler.getStartAutoupdateValue()){
-            controler.autoUpdates()
+        if (controler.getStartAutoupdateValue()) {
+            controler.autoUpdateApp()
+            controler.autoUpdatesCerts()
+        }
+        if(Qt.platform.os === "windows" && controler.getAskToRegisterCmdCertValue()){
+            mainFormID.propertyCmdDialog.open(GAPI.AskToRegisterCert)
         }
     }
 
@@ -1450,7 +1582,6 @@ Load language error. Please reinstall the application"
 
         }
     }
-
     function mainMenuBottomPressed(index){
         // if there are unsaved notes
         if(handleUnsavedNotes(index,"",Constants.MAIN_BOTTOM_MENU_PRESSED)){

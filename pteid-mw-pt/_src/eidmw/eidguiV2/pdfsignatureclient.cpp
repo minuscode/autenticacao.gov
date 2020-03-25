@@ -14,12 +14,14 @@
 #include "qfileinfo.h"
 #include "qfile.h"
 #include <string.h>
+#include <codecvt>
 
 #include "ScapSettings.h"
 #include "gapi.h"
 #include "eidlibdefines.h"
 #include "Util.h"
 #include "Config.h"
+#include "totp_gen.h"
 
 //applayer and common headers
 #include "MiscUtil.h"
@@ -54,9 +56,6 @@ PDFSignatureClient::PDFSignatureClient()
 
 }
 
-//Implemented in totp_gen.cpp
-std::string generateTOTP(std::string secretKey);
-
 /*
 TODO:
 OpenSSL utility functions: maybe move this into seperate file ??
@@ -69,12 +68,12 @@ unsigned int SHA256_Wrapper(unsigned char *data, unsigned long data_len, unsigne
 
     EVP_MD_CTX *cmd_ctx = EVP_MD_CTX_new();
     unsigned int md_len = 0;
- 
+
     //Calculate the hash from the data
     EVP_DigestInit(cmd_ctx, EVP_sha256());
     EVP_DigestUpdate(cmd_ctx, data, data_len);
     EVP_DigestFinal(cmd_ctx, digest, &md_len);
- 
+
     EVP_MD_CTX_free(cmd_ctx);
 
     return md_len;
@@ -443,6 +442,19 @@ int PDFSignatureClient::closeSCAPSignature(unsigned char * scap_signature, unsig
     return sig_handler->signClose(baSCAPSignature);
 }
 
+typedef int (*ParseHeaderFn)(struct soap*, const char*, const char*);
+
+static ParseHeaderFn pParseHeader = nullptr;
+static QString httpDate = "";
+
+static int ParseHeader(struct soap * soap, const char * key, const char * val)
+{
+    if (!soap_tag_cmp(key, "Date"))
+    {
+          httpDate = soap_strdup(soap, val);
+    }
+    return pParseHeader(soap, key, val);
+}
 
 int PDFSignatureClient::signPDF(ProxyInfo proxyInfo, QString finalfilepath, QString filepath,
                                 QString citizenName, QString citizenId,int ltv, bool isCC,
@@ -508,11 +520,17 @@ int PDFSignatureClient::signPDF(ProxyInfo proxyInfo, QString finalfilepath, QStr
          }
 	}
 	else if (proxyInfo.isManualConfig()) {
-        sp->proxy_host = strdup(proxyInfo.getProxyHost().toUtf8().constData());
-		sp->proxy_port = proxyInfo.getProxyPort().toLong();
+        sp->proxy_host = strdup(proxyInfo.getProxyHost().c_str());
+        try {
+            proxy_port = std::stol(proxyInfo.getProxyPort());
+         }
+        catch (...) {
+            eIDMW::PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature", "Error parsing proxy port to number value.");
+        }
+        sp->proxy_port = proxy_port;
 		if (proxyInfo.getProxyUser().size() > 0) {
-            sp->proxy_userid = strdup(proxyInfo.getProxyUser().toUtf8().constData());
-            sp->proxy_passwd = strdup(proxyInfo.getProxyPwd().toUtf8().constData());
+            sp->proxy_userid = strdup(proxyInfo.getProxyUser().c_str());
+            sp->proxy_passwd = strdup(proxyInfo.getProxyPwd().c_str());
 		}
 
 	}
@@ -579,6 +597,10 @@ int PDFSignatureClient::signPDF(ProxyInfo proxyInfo, QString finalfilepath, QStr
 
     qDebug() << "SCAP PDFSignatureClient:: Authorization endpoint: " << proxy.soap_endpoint;
             
+    pParseHeader = proxy.soap->fparsehdr;
+
+    proxy.soap->fparsehdr = ParseHeader;
+
     int rc = proxy.Authorization(&authorizationRequest, authorizationResponse);
 
     if (rc != SOAP_OK) {
@@ -595,7 +617,44 @@ int PDFSignatureClient::signPDF(ProxyInfo proxyInfo, QString finalfilepath, QStr
         qDebug() << "Authorization service returned SOAP_OK";
 
         //Check for Success Status
-        if (authorizationResponse.Status->Code != "00" || authorizationResponse.TransactionList == NULL) {
+        if (authorizationResponse.Status->Code == "802") {
+            qDebug() << "authorizationService returned error 802";
+            {
+                QDateTime serverTime = QDateTime::fromString(httpDate, Qt::RFC2822Date);
+                long local = time(nullptr);
+                long server = serverTime.toSecsSinceEpoch();
+                qDebug() << "local: " << local << "server: " << server;
+
+                if (abs(difftime(local,server)) > SCAP_MAX_CLOCK_DIF){
+                    PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                              "AuthorizationService returned error. error code: "
+                              "%s message: %s tLocal: %ld tServer: %ld",
+                              authorizationResponse.Status->Code.c_str(),
+                              authorizationResponse.Status->Message.c_str(),
+                              local,
+                              server);
+                    return GAPI::ScapClockError;
+                }else{
+                    PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                              "AuthorizationService returned error. error code: %s message: %s",
+                              authorizationResponse.Status->Code.c_str(),
+                              authorizationResponse.Status->Message.c_str());
+                    return GAPI::ScapSecretKeyError;
+                }
+            }
+        }
+        if (authorizationResponse.Status->Code == "803"
+                || authorizationResponse.Status->Code == "805") {
+            qDebug() << "authorizationService returned error 803 or 805";
+            {
+                PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                          "AuthorizationService returned error. error code: %s message: %s",
+                          authorizationResponse.Status->Code.c_str(),
+                          authorizationResponse.Status->Message.c_str());
+                return GAPI::ScapSecretKeyError;
+            }
+        }
+        else if (authorizationResponse.Status->Code != "00" || authorizationResponse.TransactionList == NULL) {
             qDebug() << "authorizationService returned error";
             PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
                       "AuthorizationService returned error. error code: %s and message: %s",

@@ -76,6 +76,7 @@ Loader{
             bottomPadding: 0
             font.bold: rectPopUp.activeFocus ? true : false
             font.pixelSize: Constants.SIZE_TEXT_MAIN_MENU
+            font.family: lato.name
             color: Constants.COLOR_MAIN_BLUE
         }
         Item {
@@ -134,6 +135,8 @@ Loader{
                 KeyNavigation.right: rectPopUp
                 KeyNavigation.backtab: rectPopUp
                 KeyNavigation.up: rectPopUp
+                Keys.onEnterPressed: clicked()
+                Keys.onReturnPressed: clicked()
                 highlighted: activeFocus ? true : false
                 onClicked: {
                     generalPopUp.close()
@@ -141,6 +144,8 @@ Loader{
             }
         }
         onClosed: {
+            // return to normal main window opacity
+            mainFormID.opacity = Constants.OPACITY_MAIN_FOCUS
             setReturnFocus(propertyGeneralPopUpRetSubMenu)
         }
         onOpened: {
@@ -159,5 +164,16 @@ Loader{
         } else {
             mainFormID.propertySubMenuListView.forceActiveFocus()
         }
+    }
+
+    function activateGeneralPopup(titlePopup, bodyPopup, returnToSubMenuWhenClosed){
+        titleText.text = titlePopup
+        labelText.propertyText.text = bodyPopup
+        mainFormID.propertyPageLoader.propertyGeneralPopUpRetSubMenu = returnToSubMenuWhenClosed;
+
+        // reduce main window opacity
+        mainFormID.opacity = Constants.OPACITY_POPUP_FOCUS
+        generalPopUp.visible = true;
+        rectPopUp.forceActiveFocus();
     }
 }

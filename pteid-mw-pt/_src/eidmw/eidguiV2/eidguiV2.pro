@@ -17,32 +17,6 @@ CONFIG += c++11
 QMAKE_CFLAGS += -fvisibility=hidden
 QMAKE_CXXFLAGS += -fvisibility=hidden
 
-# Copy one file to the destination directory
-defineTest(copyFileToDestDir) {
-    file = $$1
-    dir = $$2
-    message(Copying one file from: $$file to $$dir)
-    system (pwd $$quote($$file) $$escape_expand(\\n\\t))
-    system ($$QMAKE_COPY_FILE $$quote($$file) $$quote($$dir) $$escape_expand(\\n\\t))
-}
-
-# Set here the path to the credentials file
-PTEID_CREDENTIALS_FILE =
-
-isEmpty(PTEID_CREDENTIALS_FILE) {
-        message(*****************************************************************************)
-        message(**                              WARNING                                    **)
-        message(*****************************************************************************)
-        message(Do not copy credentials file. Using the credentials file template)
-        copyFileToDestDir($$PWD/credentials.h.template, $$PWD/credentials.h)
-    } else {
-        message(*****************************************************************************)
-        message(**                              WARNING                                    **)
-        message(*****************************************************************************)
-        message(Copying the credentials file )
-        copyFileToDestDir($$PTEID_CREDENTIALS_FILE, $$PWD/credentials.h)
-    }
-
 SOURCES += main.cpp \
     appcontroller.cpp \
     gapi.cpp \
@@ -51,6 +25,7 @@ SOURCES += main.cpp \
     SCAP-services-v3/SCAPAuthorizationServiceSoapBindingProxy.cpp \
     SCAP-services-v3/SCAPC.cpp \
     SCAP-services-v3/SCAPSignatureServiceSoapBindingProxy.cpp \
+    autoUpdates.cpp \
     pdfsignatureclient.cpp \
     ErrorConn.cpp \
     stdsoap2.cpp \
@@ -58,7 +33,6 @@ SOURCES += main.cpp \
     scapcompanies.cpp \
     filesavedialog.cpp \
     certificates.cpp \
-    proxyinfo.cpp \
     totp_gen.cpp \
     singleapplication.cpp \
     cJSON_1_7_12.c \
@@ -137,13 +111,16 @@ translations.path = $${INSTALL_DIR_BIN}
 translations.files += eidmw_en.qm \
                 eidmw_nl.qm
 
-INSTALLS += target translations
+fonts.path = $${INSTALL_DIR_BIN}
+fonts.files += fonts/lato/Lato-Regular.ttf
 
+INSTALLS += target translations fonts
 
 HEADERS += \
     appcontroller.h \
     gapi.h \
     filesavedialog.h \
+    autoUpdates.h \
     scapsignature.h \
     Settings.h \
     certificates.h \
@@ -152,4 +129,3 @@ HEADERS += \
     cJSON_1_7_12.h \
     AttributeFactory.h \
     OAuthAttributes.h
-

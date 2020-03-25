@@ -12,6 +12,7 @@ import QtQuick.Controls 2.1
 
 import "../../scripts/Constants.js" as Constants
 import "../../scripts/Functions.js" as Functions
+import "../../components" as Components
 
 //Import C++ defined enums
 import eidguiV2 1.0
@@ -24,9 +25,6 @@ PageDefinitionsSignSettingsForm {
     }
 
     Connections {
-        target: gapi
-    }
-    Connections {
         target: controler
     }
 
@@ -35,10 +33,9 @@ PageDefinitionsSignSettingsForm {
             propertyCheckboxRegister.checked ? gapi.setRegCertValue(true) :
                                                gapi.setRegCertValue(false)
             if (propertyCheckboxRegister.enabled) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text = qsTranslate("Popup Card","STR_POPUP_REGISTER_CERTIFICATE") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text = qsTranslate("Popup Card", "STR_POPUP_RESTART_APP") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                var titlePopup = qsTranslate("Popup Card","STR_POPUP_REGISTER_CERTIFICATE") + controler.autoTr
+                var bodyPopup = qsTranslate("Popup Card", "STR_POPUP_RESTART_APP") + controler.autoTr
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }
         }
     }
@@ -48,10 +45,9 @@ PageDefinitionsSignSettingsForm {
                                              gapi.setRemoveCertValue(false)
 
             if (propertyCheckboxRemove.enabled) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text = qsTranslate("Popup Card","STR_POPUP_REMOVE_CERTIFICATE") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text = qsTranslate("Popup Card", "STR_POPUP_RESTART_APP") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                var titlePopup = qsTranslate("Popup Card","STR_POPUP_REMOVE_CERTIFICATE") + controler.autoTr
+                var bodyPopup = qsTranslate("Popup Card", "STR_POPUP_RESTART_APP") + controler.autoTr
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }
         }
     }
@@ -70,7 +66,12 @@ PageDefinitionsSignSettingsForm {
                               controler.setTimeStampHostValue("http://ts.cartaodecidadao.pt/tsa/server")
                               propertyTextFieldTimeStamp.text = ""
                           }
-    }   
+    }
+    propertyLoadCMDCertsButton {
+        onClicked: {
+            mainFormID.propertyCmdDialog.open(GAPI.RegisterCert)
+        }
+    }
 
     Component.onCompleted: {
         console.log("Page definitionsSignSettings onCompleted")
@@ -101,6 +102,7 @@ PageDefinitionsSignSettingsForm {
                 propertyCheckboxDisable.checked = controler.getOutlookSuppressNameChecks()
         } else {
             propertyRectOffice.visible = false
+            propertyRectLoadCMDCerts.visible = false
         }
         
         if(propertyRectAppCertificates.visible){
@@ -110,5 +112,8 @@ PageDefinitionsSignSettingsForm {
         }
 
         console.log("Page definitionsSignSettings onCompleted finished")
+    }
+    function toggleSwitch(element){
+        element.checked = !element.checked
     }
 }

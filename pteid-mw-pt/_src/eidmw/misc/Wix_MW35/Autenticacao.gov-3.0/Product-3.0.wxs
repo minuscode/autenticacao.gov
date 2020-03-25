@@ -112,6 +112,7 @@
             <Directory Id="CSHARP_SDK" Name="dotnet"/>
           </Directory>
           <Directory Id="WEBDIR" Name="web"/>
+          <Directory Id="FONTSDIR" Name="fonts"/>
           <Directory Id="MINIDRIVERROOTFOLDER" Name="PTeID Minidriver"/>
 
         </Directory>
@@ -228,6 +229,12 @@
         <File Source="..\..\web\AutenticacaoGov_failed.html" />
       </Component>
     </DirectoryRef>
+
+    <DirectoryRef Id="FONTSDIR">
+      <Component Id="LatoFont" Guid="{d2c0624a-1839-11ea-8d71-362b9e155667}">
+        <File Source="..\..\..\eidguiV2\fonts\lato\Lato-Regular.ttf" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
     
     <DirectoryRef Id="DIRECTORYCACHE">
       <Component Id="DirectoryCache" Guid="{7CAEB639-7068-4084-B422-D7B5E55D0FBC}" KeyPath="yes">
@@ -292,16 +299,18 @@
         <File Source="$(var.PTEID_BUILD_FOLDER_X86)pteidlibj.dll" />
         <File Source="$(var.PTEID_BUILD_FOLDER_X86)pteidlibCS_Wrapper.dll"/>
         <File Source="$(var.PTEID_BUILD_FOLDER_X86)pteidDlgsWin32.dll" />
+        <File Source="$(var.PTEID_BUILD_FOLDER_X86)cmdServices.dll" />
+        <File Source="$(var.PTEID_BUILD_FOLDER_X86)cmdKsp.dll" />
       </Component>
 
       <Component Id="Runtime35ThirdPartyXerces" Guid="{B1EBF9C5-1A6F-44D4-AA80-DE55AAF052FE}" SharedDllRefCount="yes">
-        <File Source="$(env.PTEID_DIR_XERCES_31)\bin\xerces-c_3_2.dll" KeyPath="yes"/>
+        <File Source="$(env.PTEID_DIR_XERCES_31)\bin\xerces-c_3_1.dll" KeyPath="yes"/>
       </Component>
       <Component Id="libeay32A" Guid="{3AAFC0CD-FDCB-4F7B-9EB7-7B2E31477691}" SharedDllRefCount="yes">
-        <File Id="libeay32A" Source="$(env.PTEID_DIR_OPENSSL_098)\bin\libcrypto-1_1.dll" />
+        <File Id="libeay32A" Source="$(env.PTEID_DIR_OPENSSL_098)\bin\libeay32.dll" KeyPath="yes"/>
       </Component>
       <Component Id="ssleay32A" Guid="{6DBB15A3-6EA1-4869-B133-7D8E1321B56C}" SharedDllRefCount="yes">
-        <File Id="ssleay32A" Source="$(env.PTEID_DIR_OPENSSL_098)\bin\libssl-1_1.dll" />
+        <File Id="ssleay32A" Source="$(env.PTEID_DIR_OPENSSL_098)\bin\ssleay32.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Libpng" Guid="{561A9E2E-CA9C-4D45-A9D4-950E1CE6BA3A}" SharedDllRefCount="yes">
         <File Source="$(env.PTEID_DIR_LIBPNG)\bin\libpng16.dll" KeyPath="yes"/>
@@ -330,7 +339,7 @@
       </Component>
 
       <Component Id="XMLSecurity" Guid="{EF7A30DC-47CC-4385-832A-8E871EF69F65}" SharedDllRefCount="yes">
-        <File Source="$(env.PTEID_XMLSECURITY)\Build\Win32\VC12\Release Minimal\xsec_2_0.dll" KeyPath="yes" />
+        <File Source="$(env.PTEID_XMLSECURITY)\Build\Win32\VC10\Release No Xalan\xsec_1_7.dll" KeyPath="yes" />
       </Component>
 
       <Component Id="pkcs11" Guid="{D54164C0-795D-4B2D-96C6-C8E395100896}" SharedDllRefCount="yes">
@@ -399,6 +408,7 @@
             <RegistryValue Type="integer" Name="automatic_cardreading" Value="1"/>
             <RegistryValue Type="integer" Name="cardreader" Value="0"/>
             <RegistryValue Type="integer" Name="registrate_certificate" Value="1"/>
+            <RegistryValue Type="integer" Name="ask_register_cmd_cert" Value="1"/>
           </RegistryKey>
         </RegistryKey>
 
@@ -434,6 +444,7 @@
       <ComponentRef Id="License"/>
       <ComponentRef Id="LogDir"/>
       <ComponentRef Id="OAuthPages"/>
+      <ComponentRef Id="LatoFont"/>
 
       <!-- System32 -->
       <ComponentRef Id="Runtime35"/>
@@ -514,6 +525,11 @@
               Execute="deferred"
               />
 
+    <Binary SourceFile="$(var.PTEID_BUILD_FOLDER_X86)cmdKspConfig.exe" Id="cmdKspConfig"/>
+    <CustomAction BinaryKey="cmdKspConfig" Execute="deferred" Return="check" Impersonate="no" ExeCommand="-register" Id="KSPRegister"/>
+    <CustomAction BinaryKey="cmdKspConfig" Execute="deferred" Return="check" Impersonate="no" ExeCommand="-unregister" Id="KSPUnregister"/>
+    <CustomAction BinaryKey="cmdKspConfig" Execute="deferred" Return="check" Impersonate="yes" ExeCommand="-removeCerts" Id="KSPRemoveCmdCerts"/>
+    
     <?if $(var.PTEID_TARGET_RUNTIME) = VCR8 ?>
     <Binary Id="MarkHidden" SourceFile="..\..\..\misc\Wix_MW35\MarkHidden\Release\MarkHidden.exe"/>
     <Binary Id="CleanMdrvKeys" SourceFile="$(var.PTEID_BUILD_FOLDER_X86)clean_mdrv_keys.exe"/>
@@ -530,6 +546,9 @@
       <Custom Action="IsPrivileged" Before="LaunchConditions">Not Privileged</Custom>
       <Custom Action="SetCacheDirHidden"  After="InstallFiles">NOT Installed</Custom>
       <Custom Action="CleanMinidriverKeys" After="RemoveRegistryValues">NOT Installed</Custom>
+      <Custom Action="KSPRegister" After="InstallFiles">NOT Installed AND NOT REMOVE</Custom>
+      <Custom Action="KSPUnregister" Before="InstallFinalize">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+      <Custom Action="KSPRemoveCmdCerts" Before="InstallFinalize">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
       <ScheduleReboot After="InstallFinalize">NOT Installed</ScheduleReboot>
     </InstallExecuteSequence>
 

@@ -1,6 +1,6 @@
 /*-****************************************************************************
 
- * Copyright (C) 2017-2019 Adriano Campos - <adrianoribeirocampos@gmail.com>
+ * Copyright (C) 2017-2020 Adriano Campos - <adrianoribeirocampos@gmail.com>
  * Copyright (C) 2018-2019 Miguel Figueira - <miguelblcfigueira@gmail.com>
  * Copyright (C) 2019 João Pinheiro - <joao.pinheiro@caixamagica.pt>
  * Copyright (C) 2019 José Pinto - <jose.pinto@caixamagica.pt>
@@ -60,12 +60,9 @@ PageDefinitionsAppForm {
             controler.setPinpadEnabledValue(propertyCheckboxEnablePinpad.checked) 
 
             if (propertyCheckboxEnablePinpad.enabled) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("PageDefinitionsApp","STR_USE_PINPAD") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_RESTART_APP") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                var titlePopup = qsTranslate("PageDefinitionsApp","STR_USE_PINPAD") + controler.autoTr
+                var bodyPopup = qsTranslate("Popup Card","STR_POPUP_RESTART_APP") + controler.autoTr
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }
         }
     }
@@ -108,19 +105,43 @@ PageDefinitionsAppForm {
                           }
     }
 
+    propertyCheckboxUseSystemScale {
+        onCheckedChanged: {
+            controler.setUseSystemScaleValue(propertyCheckboxUseSystemScale.checked)
+            if (propertyCheckboxUseSystemScale.enabled) {
+                var titlePopup = qsTranslate("PageDefinitionsApp","STR_SCALE_APPLICATION_TITLE") + controler.autoTr
+                var bodyPopup = qsTranslate("Popup Card","STR_POPUP_RESTART_APP") + controler.autoTr
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
+            }
+        }
+    }
+    propertyComboBoxScaling.onActivated:  {
+        console.log("propertyComboBoxScaling onActivated index = "
+                    + propertyComboBoxScaling.currentIndex)
+        controler.setApplicationScaleValue(propertyComboBoxScaling.currentIndex)
+        mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text = qsTranslate("Popup Card", "STR_POPUP_RESTART_APP") + controler.autoTr
+        mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
+        mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+    }
+    propertyComboBoxScaling.onModelChanged: {
+        propertyComboBoxScaling.currentIndex = controler.getApplicationScaleValue()
+        console.log("propertyComboBoxScaling onModelChanged index = "
+                    + propertyComboBoxScaling.currentIndex)
+    }
+
     propertyCheckBoxDebugMode {
         onCheckedChanged: {
             var debugFilename = controler.setDebugModeValue(propertyCheckBoxDebugMode.checked)
 
             if (propertyCheckBoxDebugMode.enabled) {
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text = qsTranslate("Popup Card","STR_POPUP_DEBUG_MODE") + controler.autoTr
+                var titlePopup = qsTranslate("Popup Card","STR_POPUP_DEBUG_MODE") + controler.autoTr
+                var bodyPopup = ""
                 if (debugFilename === "") {
-                    mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text = qsTranslate("Popup Card", "STR_POPUP_RESTART_APP") + controler.autoTr
+                    bodyPopup = qsTranslate("Popup Card", "STR_POPUP_RESTART_APP") + controler.autoTr
                 } else {
-                    mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text = qsTranslate("Popup Card", "STR_POPUP_WIN_DEBUG_FILE_ERROR").arg(debugFilename) + controler.autoTr
+                    bodyPopup = qsTranslate("Popup Card", "STR_POPUP_WIN_DEBUG_FILE_ERROR").arg(debugFilename) + controler.autoTr
                 }
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }
         }
     }
@@ -133,12 +154,9 @@ PageDefinitionsAppForm {
                 controler.setGraphicsAccelValue(false)
             }
             if(propertyCheckboxAccelGraphics.enabled){
-                mainFormID.propertyPageLoader.propertyGeneralTitleText.text =
-                        qsTranslate("Popup Card","STR_POPUP_ACCEL_GRAPHICS") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUpLabelText.text =
-                        qsTranslate("Popup Card","STR_POPUP_RESTART_APP") + controler.autoTr
-                mainFormID.propertyPageLoader.propertyGeneralPopUp.visible = true;
-                mainFormID.propertyPageLoader.propertyRectPopUp.forceActiveFocus();
+                var titlePopup = qsTranslate("Popup Card","STR_POPUP_ACCEL_GRAPHICS") + controler.autoTr
+                var bodyPopup = qsTranslate("Popup Card","STR_POPUP_RESTART_APP") + controler.autoTr
+                mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
             }
         }
     }
@@ -209,9 +227,15 @@ PageDefinitionsAppForm {
 
         if (Qt.platform.os === "windows") {
             propertyCheckboxAutoStart.checked = controler.getStartAutoValue()
+
+            propertyCheckboxUseSystemScale.checked = controler.getUseSystemScaleValue()
+            propertyCheckboxUseSystemScale.enabled = true
         }else{
             propertyRectAppStart.visible = false
             propertyRectStartAutoupdate.anchors.top = propertyRectReader.bottom
+
+            propertyCheckboxUseSystemScale.visible = false
+            propertyComboBoxScaling.width = propertyComboBoxScaling.parent.width - propertyTextManualScaling.width - 2*10- Constants.SIZE_TEXT_V_SPACE
         }
 
         propertyCheckboxStartAutoupdate.checked = controler.getStartAutoupdateValue()
@@ -296,6 +320,8 @@ PageDefinitionsAppForm {
         mainFormID.propertyPageLoader.forceActiveFocus()
     }
     function handleKeyPressed(key, callingObject){
+        if (propertyComboBoxScaling.focus)
+                    return;
         var direction = getDirection(key)
         switch(direction){
             case Constants.DIRECTION_UP:
@@ -334,5 +360,12 @@ PageDefinitionsAppForm {
         // use visible area of flickable object to calculate
         // a smooth flick velocity
         return 200 + Constants.FLICK_Y_VELOCITY_MAX * (1 - propertyRowMain.visibleArea.heightRatio)
+    }
+    function toggleSwitch(element){
+        element.checked = !element.checked
+    }
+    function toggleRadio(element){
+        if (!element.checked)
+            element.checked = true
     }
 }
