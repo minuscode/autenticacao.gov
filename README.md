@@ -2,7 +2,8 @@
 ## Introdução
 ### Objectivos
 
-O objectivo deste projecto é disponibilizar uma nova versão de middleware que facilite e potencie a utilização do cartão de cidadão.
+O objectivo deste projecto é disponibilizar uma nova versão de middleware que facilite e potencie a utilização do Cartão de Cidadão
+e da assinatura com Chave Móvel Digital
 
 ## Manual de Utilização
 
@@ -35,10 +36,10 @@ A documentação da API disponibilizada pelo SDK está disponível nos seguintes
 ### Linux
 
 1. Instalação das dependências.
-   As dependências para a compilação do Middleware em Linux (nomes de pacotes válidos para a distribuição Ubuntu 18.04), são as seguintes:
+   As dependências para a compilação do Middleware em Linux (nomes de pacotes válidos para a distribuição Ubuntu 19.10), são as seguintes:
 
    ```bash
-   sudo apt install libpcsclite-dev libpoppler-qt5-dev libzip-dev libopenjp2-7-dev libpng-dev openjdk-8-jdk qtbase5-dev qt5-qmake qtbase5-private-dev qt5-default qtdeclarative5-dev qtquickcontrols2-5-dev qml-module-qtquick-controls2 libssl1.0-dev libxerces-c-dev libxml-security-c-dev swig libcurl4-nss-dev libnsspem
+   sudo apt install libpcsclite-dev libpoppler-qt5-dev libzip-dev libopenjp2-7-dev libpng-dev openjdk-11-jdk qtbase5-dev qt5-qmake qtbase5-private-dev qt5-default qtdeclarative5-dev qtquickcontrols2-5-dev qml-module-qtquick-controls2 libssl-dev libxerces-c-dev libxml-security-c-dev swig libcurl4-nss-dev libnsspem
    ```
 
 2. Clonar o repositório
@@ -63,7 +64,7 @@ A documentação da API disponibilizada pelo SDK está disponível nos seguintes
 
    A aplicação utilitária será instalada em: /usr/local/bin/eidguiV2
 
-   As dependências para a execução do Middleware na distribuição Ubuntu 18.04 estão disponíveis em "Depends" no seguinte URL: [Dependências](pteid-mw-pt/_src/eidmw/debian/control)
+   As dependências para a execução do Middleware na distribuição Ubuntu 19.10 estão disponíveis em "Depends" no seguinte URL: [Dependências](pteid-mw-pt/_src/eidmw/debian/control)
 
 
 ### Windows
@@ -73,7 +74,7 @@ Instruções para build em Windows (Visual Studio 2013)
 É importante assegurar que as dependências são compiladas com a mesma versão de Visual Studio que será usada para compilar o Middleware.
 Será assim necessário compilar as seguintes bibliotecas:
 
-- openSSL 1.0.2 - https://www.openssl.org/source/openssl-1.0.2t.tar.gz
+- openSSL 1.1.1 - https://www.openssl.org/source/openssl-1.1.1f.tar.gz
 - xerces-c - https://xerces.apache.org/xerces-c/build-3.html
 - libcurl - https://curl.haxx.se/download.html
 - zlib - http://www.zlib.net/zlib-1.2.11.tar.gz
