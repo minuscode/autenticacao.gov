@@ -1116,8 +1116,9 @@ void Catalog::addSignatureAppearance(Object *signature_field, SignatureSignerInf
   const float line_height = 10.0;
   int rect_width = ((rotate_signature == 90 || rotate_signature == 270) ? rect_y : rect_x);
   int rect_height = ((rotate_signature == 90 || rotate_signature == 270) ? rect_x : rect_y);
+  bool horizontal = rect_width > rect_height;
 
-  if (rect_width > rect_height && reason != NULL && strlen(reason) > 0)
+  if (horizontal && reason != NULL && strlen(reason) > 0)
   {
     int defaultSize = 100; // 2 lines * 50 chars per line
     int strLen = strlen(reason);
@@ -1247,7 +1248,7 @@ void Catalog::addSignatureAppearance(Object *signature_field, SignatureSignerInf
   obj1.arrayAdd(obj2.initReal(0));
   obj1.arrayAdd(obj2.initReal(0));
   obj1.arrayAdd(obj2.initReal(rect_x));
-  obj1.arrayAdd(obj2.initReal(rect_width > rect_height ? rect_height : rect_y));
+  obj1.arrayAdd(obj2.initReal(horizontal ? rect_height : rect_y));
   appearance_obj.dictAdd(copyString("BBox"), &obj1);
   appearance_obj.dictAdd(copyString("Length"),
                          obj1.initInt(ap_command_toplevel.getLength()));
@@ -1335,8 +1336,9 @@ void Catalog::addSignatureAppearanceSCAP(Object *signature_field, SignatureSigne
 
   int rect_width = rotate_signature ? rect_y : rect_x;
   int rect_height = rotate_signature ? rect_x : rect_y;
+  bool horizontal = rect_width > rect_height;
 
-  if (rect_width > rect_height)
+  if (horizontal && reason != NULL && strlen(reason) > 0)
   {
     int defaultSize = 100; // 2 lines * 50 chars per line
     int strLen = strlen(reason);
@@ -1581,7 +1583,7 @@ void Catalog::addSignatureAppearanceSCAP(Object *signature_field, SignatureSigne
   obj1.arrayAdd(obj2.initReal(0));
   obj1.arrayAdd(obj2.initReal(0));
   obj1.arrayAdd(obj2.initReal(rect_x));
-  obj1.arrayAdd(obj2.initReal(rect_y));
+  obj1.arrayAdd(obj2.initReal(horizontal ? rect_height : rect_y));
   appearance_obj.dictAdd(copyString("BBox"), &obj1);
   appearance_obj.dictAdd(copyString("Length"),
                          obj1.initInt(ap_command_toplevel.getLength()));
