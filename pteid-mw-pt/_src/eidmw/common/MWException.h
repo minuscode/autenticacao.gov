@@ -27,6 +27,7 @@
 
 #include <exception>
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -63,7 +64,19 @@ protected:
 	long m_lPinRef;
 };
 
+
+#ifdef _WIN32
+#define DIR_SEP '\\'
+
+//Reduced form of the standard __FILE__ macro: remove all directories from the path
+inline const char *basename_for_logging(const char * path) {
+	return (strrchr(path, DIR_SEP) ? strrchr(path, DIR_SEP) + 1 : path);
+}
+#define CMWEXCEPTION(i)	CMWException(i, basename_for_logging(__FILE__), __LINE__)
+#else
 #define CMWEXCEPTION(i)	CMWException(i, __FILE__, __LINE__)
+#endif
+
 
 }
 #endif

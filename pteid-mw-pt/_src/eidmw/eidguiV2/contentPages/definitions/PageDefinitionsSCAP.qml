@@ -1,7 +1,7 @@
 /*-****************************************************************************
 
  * Copyright (C) 2017 André Guerreiro - <aguerreiro1985@gmail.com>
- * Copyright (C) 2017-2020 Adriano Campos - <adrianoribeirocampos@gmail.com>
+ * Copyright (C) 2017-2021 Adriano Campos - <adrianoribeirocampos@gmail.com>
  * Copyright (C) 2018-2019 Miguel Figueira - <miguel.figueira@caixamagica.pt>
  * Copyright (C) 2019 José Pinto - <jose.pinto@caixamagica.pt>
  *
@@ -29,17 +29,17 @@ PageDefinitionsSCAPForm {
     Keys.onRightPressed: {
         if(propertylinkScapEntities.activeFocus
                 || propertylinkScapCompanies.activeFocus)
-            returnToAdvancedSignaturePage()
+            returnToSignaturePage()
     }
     Keys.onSpacePressed: {
         if(propertylinkScapEntities.activeFocus
                 || propertylinkScapCompanies.activeFocus)
-            returnToAdvancedSignaturePage()
+            returnToSignaturePage()
     }
     Keys.onReturnPressed: {
         if(propertylinkScapEntities.activeFocus
                 || propertylinkScapCompanies.activeFocus)
-            returnToAdvancedSignaturePage()
+            returnToSignaturePage()
     }
 
     Keys.onPressed: {
@@ -378,6 +378,14 @@ PageDefinitionsSCAPForm {
             propertyBusyIndicatorAttributes.running = false
             mainFormID.opacity = Constants.OPACITY_MAIN_FOCUS
         }
+        onSignalAttributesPossiblyExpired: {
+            var titlePopup = qsTranslate("PageServicesSign","STR_SCAP_WARNING")
+            var bodyPopup = qsTranslate("PageServicesSign","STR_SCAP_ATTRS_POSSIBLY_EXPIRED") + "<br>"
+            for (var i = 0; i < expiredSuppliers.length; i++) {
+                bodyPopup += "<br> - " + expiredSuppliers[i]
+            }
+            mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
+        }
         onSignalRemoveSCAPAttributesSucess: {
             console.log("Definitions SCAP - Signal SCAP Signal Remove SCAP Attributes Sucess")
             if (isLoadingAttributes == false) {
@@ -454,12 +462,6 @@ PageDefinitionsSCAPForm {
             if (oauthResult != 0)
                 propertyBusyIndicatorAttributes.running = false
             mainFormID.propertyPageLoader.activateGeneralPopup(titlePopup, bodyPopup, false)
-        }
-    }
-
-    propertyListViewEntities{
-        onFocusChanged: {
-            if(propertyListViewEntities.focus)propertyListViewEntities.currentIndex = 0
         }
     }
 
@@ -810,14 +812,14 @@ PageDefinitionsSCAPForm {
     propertyMouseArealinkScapEntities {
         onClicked: {
             console.log("propertyMouseArealinkScapEntities clicked!")
-            returnToAdvancedSignaturePage()
+            returnToSignaturePage()
         }
     }
 
     propertyMouseArealinkScapCompanies {
         onClicked: {
             console.log("propertyMouseArealinkScapCompanies clicked!")
-            returnToAdvancedSignaturePage()
+            returnToSignaturePage()
         }
     }
     propertyBar{
@@ -839,27 +841,14 @@ PageDefinitionsSCAPForm {
         gapi.startGettingEntities()
     }
 
-    function returnToAdvancedSignaturePage() {
+    function returnToSignaturePage() {
         propertyPageLoader.propertyBackupFromSignaturePage = false
         mainFormID.state = Constants.MenuState.EXPAND
         mainFormID.propertySubMenuListView.model.clear()
-        for(var i = 0; i < mainFormID.propertyMainMenuListView.model.get(1).subdata.count; ++i) {
-            /*console.log("Sub Menu indice " + i + " - "
-                        + mainFormID.propertyMainMenuListView.model.get(1).subdata.get(i).subName);*/
-            mainFormID.propertySubMenuListView.model
-            .append({
-                        "subName": qsTranslate("MainMenuModel",
-                                            mainFormID.propertyMainMenuListView.model.get(1).subdata.get(i).name),
-                        "expand": mainFormID.propertyMainMenuListView.model.get(1).subdata.get(i)
-                        .expand,
-                        "url": mainFormID.propertyMainMenuListView.model.get(1).subdata.get(i)
-                        .url
-                    })
-        }
-        mainFormID.propertyMainMenuListView.currentIndex = 1
+        mainFormID.propertyMainMenuListView.currentIndex = Constants.MAIN_MENU_SIGN_PAGE_INDEX
         mainFormID.propertyMainMenuBottomListView.currentIndex = -1
         mainFormID.propertySubMenuListView.currentIndex = -1
-        mainFormID.propertyPageLoader.source = "/contentPages/services/PageServicesSignAdvanced.qml"
+        mainFormID.propertyPageLoader.source = "../../" + Constants.SIGNATURE_PAGE_URL
     }
 
     function isAnyEntitySelected() {

@@ -237,7 +237,8 @@ public:
     enum AutoUpdateType {AutoUpdateNoExist, AutoUpdateApp, AutoUpdateCerts, AutoUpdateNews};
 
     enum ScapPdfSignResult { ScapTimeOutError, ScapGenericError, ScapAttributesExpiredError, ScapZeroAttributesError,
-                             ScapNotValidAttributesError, ScapClockError, ScapSecretKeyError, ScapMultiEntityError, ScapSucess };
+                             ScapNotValidAttributesError, ScapClockError, ScapSecretKeyError, ScapMultiEntityError,
+                             ScapSucess, ScapAttrPossiblyExpiredWarning };
 
     enum ScapAttrType {ScapAttrEntities, ScapAttrCompanies, ScapAttrAll};
     enum ScapAttrDescription {ScapAttrDescriptionShort, ScapAttrDescriptionLong};
@@ -246,7 +247,7 @@ public:
 
     enum CmdDialogClass { Sign, RegisterCert, AskToRegisterCert };
 
-    enum ShortcutId { ShortcutIdNone, ShortcutIdSignSimple, ShortcutIdSignAdvanced};
+    enum ShortcutId { ShortcutIdNone, ShortcutIdSign};
 
     enum SignLevel { LevelBasic, LevelTimestamp, LevelLTV };
 
@@ -333,6 +334,7 @@ public slots:
     void startLoadingAttributesFromCache(int scapAttrType, bool isShortDescription);
     void startRemovingAttributesFromCache(int scapAttrType);
     void startGettingEntityAttributes(QList<int> entity_index, bool useOAuth);
+    static bool isAttributeExpired(std::string& date, std::string& supplier);
     void startPingSCAP();
 
     void startSigningSCAP(QString inputPdf, QString outputPDF, int page, double location_x, double location_y,
@@ -448,6 +450,7 @@ signals:
     void signalPdfSignFail(int error_code);
     void signalUpdateProgressBar(int value);
     void signalUpdateProgressStatus(const QString statusMessage);
+    void signalAddressShowLink();
     void addressChangeFinished(long return_code);
     void signCMDFinished(long error_code);
     void signalValidateOtp();
@@ -478,6 +481,7 @@ signals:
     void signalAttributesLoaded(const QList<QString> attribute_list);
     void signalCompanyAttributesLoadedError();
     void signalEntityAttributesLoadedError();
+    void signalAttributesPossiblyExpired(const QStringList expiredSuppliers);
     void signalPdfPrintSucess();
     void signalPrinterPrintSucess();
     void signalPdfPrintSignSucess();

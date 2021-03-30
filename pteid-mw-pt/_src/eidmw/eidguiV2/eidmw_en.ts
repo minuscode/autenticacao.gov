@@ -478,6 +478,22 @@
         <source>STR_VERIFY_PROXY</source>
         <translation>Verify if the proxy is well configured.</translation>
     </message>
+    <message>
+        <source>STR_SCAP_NOT_VALID_ATTRIBUTES</source>
+        <translation>One or more selected attributes are not active. Please clear a cache and reload its attributes</translation>
+    </message>
+    <message>
+        <source>STR_SIGN_OPEN_HELP</source>
+        <translation>Open help</translation>
+    </message>
+    <message>
+        <source>STR_SIGN_OPEN_OPTIONS</source>
+        <translation>Open advanced options</translation>
+    </message>
+    <message>
+        <source>STR_SCAP_CHECK_EXPIRED_ATTR</source>
+        <translation>Check if the selected attributes are expired.</translation>
+    </message>
 </context>
 <context>
     <name>MainMenuBottomModel</name>
@@ -557,18 +573,6 @@
         <translation>Signature</translation>
     </message>
     <message>
-        <source>STR_MENU_SIGN_HELP</source>
-        <translation>Help</translation>
-    </message>
-    <message>
-        <source>STR_MENU_SIGN_SIMPLE</source>
-        <translation>Simple</translation>
-    </message>
-    <message>
-        <source>STR_MENU_SIGN_ADVANCE</source>
-        <translation>Advanced</translation>
-    </message>
-    <message>
         <source>STR_MENU_SECURITY</source>
         <translation>Security</translation>
     </message>
@@ -624,10 +628,6 @@
         <translation>If you have requested a change of address, enter the process number and secret code received by mail. If you want to change your address, click</translation>
     </message>
     <message>
-        <source>STR_ADDRESS_CHANGE_TEXT_LINK</source>
-        <translation>here</translation>
-    </message>
-    <message>
         <source>STR_ADDRESS_CHANGE_NUMBER</source>
         <translation>Process Number</translation>
     </message>
@@ -662,6 +662,14 @@
     <message>
         <source>STR_ADDRESS_CHANGE_BUTTON</source>
         <translation>Confirm</translation>
+    </message>
+    <message>
+        <source>STR_CHANGE_ADDRESS_LINK</source>
+        <translation>For more information about change your address, click </translation>
+    </message>
+    <message>
+        <source>STR_ADDRESS_CHANGE_TEXT_HERE</source>
+        <translation>here.</translation>
     </message>
 </context>
 <context>
@@ -907,7 +915,7 @@
     </message>
     <message>
         <source>STR_DEBUG_MODE_DESCRIPTION</source>
-        <translation>Please enable debug mode if you encounter problems with the application.</translation>
+        <translation>If you encounter problems with the application, first, enable debug mode. Then, repeat the action that lead to the problem. Lastly, press the &quot;Create Report&quot; button.</translation>
     </message>
     <message>
         <source>STR_DEBUG_MODE_ENABLE</source>
@@ -1053,6 +1061,34 @@
         <source>STR_ROOT_CERT_INSTALLED_ERROR</source>
         <translation>It was not possible to install the certificate.</translation>
     </message>
+    <message>
+        <source>STR_LOG_ZIP_SUCCESS_TITLE</source>
+        <translation>Report created successfully</translation>
+    </message>
+    <message>
+        <source>STR_LOG_ZIP_SUCCESS</source>
+        <translation>A report was created on Desktop, with the name: </translation>
+    </message>
+    <message>
+        <source>STR_LOG_ZIP_FAIL_TITLE</source>
+        <translation>Error creating report</translation>
+    </message>
+    <message>
+        <source>STR_LOG_ZIP_FAIL</source>
+        <translation>An error occured creating report on Desktop.</translation>
+    </message>
+    <message>
+        <source>STR_LOG_ZIP_BUTTON</source>
+        <translation>Create report</translation>
+    </message>
+    <message>
+        <source>STR_LOG_ZIP_DESCRIPTION</source>
+        <translation>After pressing the button &quot;Create Report&quot;, a file will be created on Desktop, which should be sent to the support team through the email address &lt;a href=&quot;mailto:cartaodecidadao@irn.mj.pt&quot;&gt;cartaodecidadao@irn.mj.pt&lt;/a&gt;, along with a description of the problem.</translation>
+    </message>
+    <message>
+        <source>STR_LOG_ZIP_LARGE</source>
+        <translation>Warning: The created file&apos;s size exceeds 15MB. For this reason, it&apos;s possible some email clients won&apos;t allow it to be annexed to the message.</translation>
+    </message>
 </context>
 <context>
     <name>PageDefinitionsSCAP</name>
@@ -1158,7 +1194,7 @@
     </message>
     <message>
         <source>STR_BACK_TO_SIGNATURE_PAGE</source>
-        <translation>Click here to return to the advanced signature page</translation>
+        <translation>Click here to return to the signature page</translation>
     </message>
     <message>
         <source>STR_SCAP_BUTTON_LOAD</source>
@@ -1260,7 +1296,7 @@
     </message>
     <message>
         <source>STR_UPDATE_INSTALL_FAIL</source>
-        <translation>The installation of one or more certificates failed.</translation>
+        <translation>Failed to install update.</translation>
     </message>
     <message>
         <source>STR_UPDATE_SUCCESS</source>
@@ -1329,7 +1365,7 @@
     </message>
     <message>
         <source>STR_UPDATE_AVAILABLE</source>
-        <translation>A new update is available. Press Install do perform the update.</translation>
+        <translation>A new update is available. Press &lt;b&gt;Install&lt;/b&gt; to perform the update or, to check the available versions, click </translation>
     </message>
     <message>
         <source>STR_UPDATE_STARTING_DOWNLOAD</source>
@@ -1337,7 +1373,7 @@
     </message>
     <message>
         <source>STR_UPDATE_TEXT</source>
-        <translation>Press the button to check for available updates.</translation>
+        <translation>Press the button to check for available updates or, to check the available versions, click </translation>
     </message>
     <message>
         <source>STR_UPDATE_BUTTON</source>
@@ -1375,6 +1411,30 @@
     <message>
         <source>STR_UPDATE_CERTS_NEWS</source>
         <translation>New certificates</translation>
+    </message>
+    <message>
+        <source>STR_UPDATE_SUPPORTED_SYSTEMS</source>
+        <translation>To check the supported operating systems click </translation>
+    </message>
+    <message>
+        <source>STR_UPDATE_TEXT_LINK</source>
+        <translation>here</translation>
+    </message>
+    <message>
+        <source>STR_UPDATE_TRANSFER_DONE</source>
+        <translation>Download completed.&lt;br&gt;You can find the new package in the &lt;b&gt;Downloads&lt;/b&gt; directory.&lt;br&gt;To proceed with the installation, follow the instructions indicated in the user manual available </translation>
+    </message>
+    <message>
+        <source>STR_UPDATE_BUTTON_OPEN_TRANSFERS</source>
+        <translation>Open &lt;b&gt;Downloads&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>STR_UPDATE_CERTS_TEXT</source>
+        <translation>Press the button to check for available updates.</translation>
+    </message>
+    <message>
+        <source>STR_UPDATE_INSTALL_CERTS_FAIL</source>
+        <translation>The installation of one or more certificates failed.</translation>
     </message>
 </context>
 <context>
@@ -1743,7 +1803,7 @@
     </message>
     <message>
         <source>STR_POPUP_FILE_CANCEL</source>
-        <translation>Cancel</translation>
+        <translation type="vanished">Cancel</translation>
     </message>
     <message>
         <source>STR_LOAD_PDF_ERROR_MSG</source>
@@ -1775,20 +1835,20 @@
     </message>
     <message>
         <source>STR_SIGN_TITLE_SIGN</source>
-        <translation>Select signature place</translation>
+        <translation type="vanished">Select signature place</translation>
     </message>
     <message>
         <source>STR_SIGN_TITLE_FILE</source>
-        <translation>Select file</translation>
+        <translation type="vanished">Select file</translation>
     </message>
     <message>
         <source>STR_SIGN_DROP</source>
-        <translation>Drag a file to be signed or click to find a file</translation>
+        <translation type="vanished">Drag a file to be signed or click to find a file</translation>
     </message>
     <message>
         <source>STR_SIGN_ADD_BUTTON</source>
         <oldsource>STR_SIGN_ADD_BUTTON1</oldsource>
-        <translation>Add file</translation>
+        <translation type="vanished">Add file</translation>
     </message>
     <message>
         <source>STR_SIGN_ADD_MULTI_BUTTON</source>
@@ -1864,7 +1924,7 @@
     </message>
     <message>
         <source>STR_SIGN_REMOVE_BUTTON</source>
-        <translation>Remove file</translation>
+        <translation type="vanished">Remove file</translation>
     </message>
     <message>
         <source>STR_SIGN_CARD_BUTTON</source>
@@ -1886,10 +1946,6 @@
     <message>
         <source>STR_SIGN_HELP_CMD_SELECT</source>
         <translation>https://www.autenticacao.gov.pt/cmd-pedido-chave</translation>
-    </message>
-    <message>
-        <source>STR_SIGN_HELP_TOPIC_1</source>
-        <translation>Use the &quot;Simple&quot; menu to sign a PDF document or the &quot;Advanced&quot; menu for other file types and additional options.</translation>
     </message>
     <message>
         <source>STR_SIGN_HELP_AUTENTICACAO.GOV_LINK</source>
@@ -1917,11 +1973,43 @@
     </message>
     <message>
         <source>STR_SIGN_ADD_LTV</source>
-        <translation>Add LTV</translation>
+        <translation>Long-Term Validation</translation>
     </message>
     <message>
         <source>STR_LTV_TOOLTIP</source>
         <translation>The Long Term Validation (LTV) includes validation data of the certificate chain used in the signature which allows future signature verifications to confirm that the signature was valid at generation time.</translation>
+    </message>
+    <message>
+        <source>STR_SCAP_ATTRS_POSSIBLY_EXPIRED</source>
+        <translation>The attributes provided by the following entities may be expired:</translation>
+    </message>
+    <message>
+        <source>STR_SIGN_ADVANCED_OPTIONS</source>
+        <translation>Advanced options</translation>
+    </message>
+    <message>
+        <source>STR_SIGN_NAV_FILE_PREVIEW</source>
+        <translation>Preview of file: </translation>
+    </message>
+    <message>
+        <source>STR_SIGN_OPEN_ERROR</source>
+        <translation>The signed file could not be opened. Check if the destination folder still exists or the file has been removed. </translation>
+    </message>
+    <message>
+        <source>STR_SIGN_OPEN_ERROR_TITLE</source>
+        <translation>Open signed file</translation>
+    </message>
+    <message>
+        <source>STR_SIGN_OPEN_ERROR_TITLE_MULTI</source>
+        <translation>Open folder with signed file(s)</translation>
+    </message>
+    <message>
+        <source>STR_SIGN_OPEN_ERROR_MULTI</source>
+        <translation>Could not open the destination folder for signed files. Check that the destination folder still exists. </translation>
+    </message>
+    <message>
+        <source>STR_LOAD_XFA_FORM_PDF_ERROR_MSG</source>
+        <translation>PDF files with XFA forms are not supported.</translation>
     </message>
 </context>
 <context>
@@ -2047,7 +2135,7 @@
     </message>
     <message>
         <source>STR_POPUP_FILE_UNIQUE_MULTI</source>
-        <translation>To sign multiple files use the advanced signature page</translation>
+        <translation>There is only one personalized signature</translation>
     </message>
     <message>
         <source>STR_POPUP_FILE_CANCEL</source>

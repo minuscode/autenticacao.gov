@@ -1,7 +1,7 @@
 /*-****************************************************************************
 
  * Copyright (C) 2017-2019 André Guerreiro - <aguerreiro1985@gmail.com>
- * Copyright (C) 2017-2020 Adriano Campos - <adrianoribeirocampos@gmail.com>
+ * Copyright (C) 2017-2021 Adriano Campos - <adrianoribeirocampos@gmail.com>
  * Copyright (C) 2018 Veniamin Craciun - <veniamin.craciun@caixamagica.pt>
  * Copyright (C) 2019 Miguel Figueira - <miguel.figueira@caixamagica.pt>
  *
@@ -82,10 +82,25 @@ std::vector<ns3__AttributeType*> ScapServices::getSelectedAttributes(std::vector
     return parsedAttributes;
 }
 
+bool detectExpiredAttributes(std::vector<ns3__AttributeType*> selected_attributes){
+    std::string validity, supplier;
+
+    for (unsigned int i = 0; i < selected_attributes.size(); i++) {
+        supplier = selected_attributes.at(i)->AttributeSupplier->Name;
+        validity = selected_attributes.at(i)->Validity;
+
+        if (GAPI::isAttributeExpired(validity, supplier)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /*
 *  SCAP signature with citizen signature using CMD
 */
-void ScapServices::executeSCAPWithCMDSignature(GAPI *parent, QString &savefilepath, int selected_page,
+int ScapServices::executeSCAPWithCMDSignature(GAPI *parent, QString &savefilepath, int selected_page,
         double location_x, double location_y, QString &location, QString &reason, bool isTimestamp, bool isLtv,
         std::vector<int> attributes_index, CmdSignedFileDetails cmd_details,
         bool useCustomImage, QByteArray &m_jpeg_scaled_data) {
@@ -95,7 +110,7 @@ void ScapServices::executeSCAPWithCMDSignature(GAPI *parent, QString &savefilepa
     if (selected_attributes.size() == 0)
     {
         qDebug() << "Couldn't find any index in m_attributesList!";
-        return;
+        return GAPI::ScapGenericError;
     }
 
     PDFSignatureClient scap_signature_client;
@@ -117,40 +132,59 @@ void ScapServices::executeSCAPWithCMDSignature(GAPI *parent, QString &savefilepa
         throw;
     }
     if (successful == GAPI::ScapSucess) {
-        parent->signCMDFinished(ERR_NONE);
         PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_CRITICAL, "ScapSignature",
-                  "SCAP signature with CMD sucess");
+                "SCAP CMD ScapSuccess");
+    }
+    else if (successful == GAPI::ScapAttributesExpiredError) {
+        qDebug() << "Error in SCAP service ScapAttributesExpiredError!";
+        parent->signCMDFinished(SCAP_ATTRIBUTES_EXPIRED);
+        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                "SCAP CMD Error. ScapAttributesExpiredError");
+    }
+    else if (successful == GAPI::ScapZeroAttributesError) {
+        qDebug() << "Error in SCAP service ScapZeroAttributesError!";
+        parent->signCMDFinished(SCAP_ZERO_ATTRIBUTES);
+        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                "SCAP CMD Error. ScapZeroAttributesError");
+    }
+    else if (successful == GAPI::ScapNotValidAttributesError) {
+        qDebug() << "Error in SCAP service ScapNotValidAttributesError!";
+        parent->signCMDFinished(SCAP_ATTRIBUTES_NOT_VALID);
+        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                "SCAP CMD Error. ScapNotValidAttributesError");
     }
     else if (successful == GAPI::ScapTimeOutError) {
         qDebug() << "Error in SCAP service Timeout with CMD service!";
         parent->signalSCAPServiceTimeout();
-        parent->signCMDFinished(SCAP_GENERIC_ERROR_CODE);
         PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
-                  "SCAP CMD Error. ScapTimeOutError");
+                "SCAP CMD Error. ScapTimeOutError");
     }
     else if (successful == GAPI::ScapClockError) {
         qDebug() << "Error in SCAP service Clock Error with CMD service!";
         parent->signCMDFinished(SCAP_CLOCK_ERROR_CODE);
         PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
-                  "SCAP CMD Error. ScapClockError");
+                "SCAP CMD Error. ScapClockError");
     }
     else if (successful == GAPI::ScapSecretKeyError) {
         qDebug() << "Error in SCAP service SecretKey Error with CMD service!";
-        parent->signalShowLoadAttrButton();
         parent->signCMDFinished(SCAP_SECRETKEY_ERROR_CODE);
         PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
-                  "SCAP CMD Error. ScapSecretKeyError");
+                "SCAP CMD Error. ScapSecretKeyError");
     }
     else {
-        qDebug() << "Error in SCAP Signature with CMD service!";
-        parent->signalSCAPServiceFail(successful);
-        parent->signCMDFinished(SCAP_GENERIC_ERROR_CODE);
-        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
-                  "SCAP CMD Error. ScapPdfSignResult = %d",successful);
+        if (detectExpiredAttributes(selected_attributes)) {
+            parent->signCMDFinished(SCAP_ATTR_POSSIBLY_EXPIRED_WARNING);
+            PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                    "SCAP CMD Error with possibly expired attributes. ScapPdfSignResult = %d",successful);
+        }
+        else {
+            qDebug() << "Error in SCAP Signature with CMD service!";
+            parent->signCMDFinished(SCAP_GENERIC_ERROR_CODE);
+            PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                    "SCAP CMD Error. ScapPdfSignResult = %d",successful);
+        }
     }
-
-    parent->signalUpdateProgressBar(100);
-
+    return successful;
 }
 
 void ScapServices::executeSCAPSignature(GAPI *parent, QString &inputPath, QString &savefilepath, int selected_page,
@@ -190,8 +224,9 @@ void ScapServices::executeSCAPSignature(GAPI *parent, QString &inputPath, QStrin
         eIDMW::PTEID_EIDCard &card = readerContext.getEIDCard();
 
         PTEID_PDFSignature pdf_sig(strdup(inputPath.toUtf8().constData()));
-		PTEID_SignatureLevel citizen_signature_level = isLtv ? PTEID_LEVEL_LT : PTEID_LEVEL_BASIC;
-		pdf_sig.setSignatureLevel(citizen_signature_level);
+        PTEID_SignatureLevel citizen_signature_level = isTimestamp ?
+                (isLtv ? PTEID_LEVEL_LT : PTEID_LEVEL_TIMESTAMP) : PTEID_LEVEL_BASIC;
+        pdf_sig.setSignatureLevel(citizen_signature_level);
 
         // Sign pdf
         sign_rc = card.SignPDF(pdf_sig, selected_page, 0, false, strdup(location.toUtf8().constData()),
@@ -254,10 +289,17 @@ void ScapServices::executeSCAPSignature(GAPI *parent, QString &inputPath, QStrin
                             "SCAP CC ScapSecretKeyError");
                 }
                 else {
-                    qDebug() << "Error in SCAP Signature service!";
-                    parent->signalSCAPServiceFail(successful);
-                    PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
-                            "SCAP CC Error. ScapPdfSignResult = %d",successful);
+                    if (detectExpiredAttributes(selected_attributes)) {
+                        parent->signalSCAPServiceFail(GAPI::ScapAttrPossiblyExpiredWarning);
+                        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                                "SCAP CC Error with possibly expired attributes. ScapPdfSignResult = %d",successful);
+                    }
+                    else {
+                        qDebug() << "Error in SCAP Signature service!";
+                        parent->signalSCAPServiceFail(successful);
+                        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                                "SCAP CC Error. ScapPdfSignResult = %d",successful);
+                    }
                 }
             }
             catch (eIDMW::PTEID_Exception &e)

@@ -1,7 +1,7 @@
 /*-****************************************************************************
 
  * Copyright (C) 2019 Miguel Figueira - <miguelblcfigueira@gmail.com>
- * Copyright (C) 2019 Adriano Campos - <adrianoribeirocampos@gmail.com>
+ * Copyright (C) 2019-2021 Adriano Campos - <adrianoribeirocampos@gmail.com>
  * Copyright (C) 2019 José Pinto - <jose.pinto@caixamagica.pt>
  *
  * Licensed under the EUPL V.1.2
@@ -31,7 +31,7 @@ Item {
         font.italic: false
         font.family: lato.name
         font.capitalization: Font.MixedCase
-        font.bold: activeFocus? true : false
+        font.bold: activeFocus || parent.activeFocus ? true : false
         color: Constants.COLOR_TEXT_BODY
         visible: parent.visible
         font.underline: mouseArea.containsMouse

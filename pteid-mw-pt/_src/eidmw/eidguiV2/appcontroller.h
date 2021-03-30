@@ -32,6 +32,7 @@
 #include "autoUpdates.h"
 
 #define STR_LOCALTIME_MAX_SIZE   24
+#define TIMESTAMP_MAX_SIZE       15
 
 class AppController : public QObject
 {
@@ -128,6 +129,11 @@ public slots:
     /* Is proxy manually configured or using system? */
     bool isProxyConfigured();
 
+    bool getShowSignatureOptions(void);
+    void setShowSignatureOptions(bool bShowSignatureOptions);
+    bool getShowSignatureHelp(void);
+    void setShowSignatureHelp(bool bShowSignatureHelp);
+
     bool isOutlookInstalled();
     bool getOutlookSuppressNameChecks(void);
     void setOutlookSuppressNameChecks(bool bDisabledMatching);
@@ -145,6 +151,8 @@ public slots:
     QString getFontFile(QString font);
     QStringList getFilesFromClipboard();
     static void initApplicationScale();
+    void openTransfersFolder();
+    void zipLogs();
 
 private:
     GUISettings&    m_Settings;
@@ -189,6 +197,8 @@ signals:
     void signalCacheNotWritable();
     void signalAppCacheSize(QString cacheSize);
     void signalScapCacheSize(QString cacheSize);
+    void signalZipLogsSuccess(bool largeZip, QString filename);
+    void signalZipLogsFail();
 };
 
 #endif // APPCONTROLLER_H

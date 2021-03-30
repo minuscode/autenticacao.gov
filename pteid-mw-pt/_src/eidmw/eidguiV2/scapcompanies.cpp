@@ -29,7 +29,7 @@ std::vector<ns2__AttributesType *> loadCacheFile(QString &filePath) {
     std::vector<ns2__AttributesType *> attributesType;
     QFile cacheFile(filePath);
     if( !cacheFile.open(QIODevice::ReadOnly) ) {
-        std::cerr << "loadCacheFile() Error: " << cacheFile.errorString().toStdString() << std::endl;
+        qDebug() << "loadCacheFile() Error: " << cacheFile.errorString();
         return attributesType;
     }
     qDebug() << "Reading XML cached file";
@@ -52,14 +52,15 @@ std::vector<ns2__AttributesType *> loadCacheFile(QString &filePath) {
     qDebug() << "Retrieved attributes from converting XML to object. Size: "<< attr_response.AttributeResponseValues.size();
 
     if (ret != 0) {
-        std::cerr << "Error reading AttributeResponseType" << std::endl;
+        qDebug() << "Error reading AttributeResponseType";
         return attributesType;
     }
     attributesType = attr_response.AttributeResponseValues;
 
     //Remove malformed elements contained in the cache file (returned by service response)
     attributesType.erase(
-        std::remove_if(attributesType.begin(), attributesType.end(), [] (ns2__AttributesType *attr) { return attr->ATTRSupplier == NULL; } ),
+        std::remove_if(attributesType.begin(), attributesType.end(), [] (ns2__AttributesType *attr) 
+            { return attr->ATTRSupplier == NULL || attr->ResponseResult->ResultCode != "200" ;} ),
         attributesType.end());
     
     return attributesType;
@@ -92,7 +93,7 @@ std::vector<ns2__AttributesType *>
         }
     }
     catch(...) {
-        std::cerr << "Error ocurred while loading attributes from cache!";
+        qDebug() << "Error ocurred while loading attributes from cache!";
         //TODO: report error
     }
     return m_attributesList;
@@ -190,7 +191,7 @@ std::vector<ns2__AttributesType *>
         */
     }
     catch(...) {
-        std::cerr << "Error ocurred while loading attributes from cache!";
+        qDebug() << "Error ocurred while loading attributes from cache!";
         //TODO: report error
     }
     return m_attributesList;
@@ -219,7 +220,7 @@ bool ScapServices::removeAttributesFromCache() {
 
     }
     catch(...) {
-        std::cerr << "Error ocurred while removing attributes from cache!";
+        qDebug() << "Error ocurred while removing attributes from cache!";
         return false;
     }
 }
@@ -371,6 +372,7 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
                 soap_destroy(&sp);
                 soap_end(&sp);
                 soap_done(&sp);
+                m_oauth = NULL;
                 return result;
             }
             std::map<CitizenAttribute, std::string> *attributesMap = oauth.getAttributes();
@@ -470,6 +472,7 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
                 soap_destroy(&sp);
                 soap_end(&sp);
                 soap_done(&sp);
+                m_oauth = NULL;
                 return result;
             }
 
@@ -494,10 +497,18 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
 
         if (!useOAuth)
         {
-            int initialPos = replyString.find("<AttributeResponse");
+            size_t initialPos = replyString.find("<AttributeResponse");
+            if (initialPos == std::string::npos)
+            {
+                PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
+                    "Error reading AttributeResponse! Malformed XML response.");
+                parent->signalSCAPDefinitionsServiceFail(GAPI::ScapGenericError, allEnterprises);
+                m_oauth = NULL;
+                return result;
+            }
             std::string endString = "</AttributeResponse>";
 
-            int finalPos = replyString.find(endString) + endString.length();
+            size_t finalPos = replyString.find(endString) + endString.length();
             replyString = replyString.substr(initialPos, finalPos - initialPos);
         }
         else
@@ -530,10 +541,9 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
         // Retrieve ns2__AttributeResponseType
         ns2__AttributeResponseType attr_response;
         ret = soap_read_ns2__AttributeResponseType(&soap2, &attr_response);
-        
+
         if (ret != 0) {
             qDebug() << "Error reading AttributeResponseType! Malformed XML response";
-            std::cerr << "Error reading AttributeResponseType! Malformed XML response" << std::endl;
             PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "ScapSignature",
                       "Error reading AttributeResponseType! Malformed XML response. Error Code: %d",ret);
             parent->signalSCAPDefinitionsServiceFail(GAPI::ScapGenericError, allEnterprises);
@@ -541,13 +551,14 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
             //soap_destroy(&soap2);
             //soap_end(&soap2);
             //soap_done(&soap2);
+            m_oauth = NULL;
             return result;
         }
 
         unsigned int resp_size = attr_response.AttributeResponseValues.size();
 
-        std::cerr << "Got response from converting XML to object. Size: " << resp_size  << std::endl;
-        
+        qDebug() << "Got response from converting XML to object. Size: " << resp_size;
+
         if (resp_size > 0) {
 
             if (attr_response.SecretKey != NULL) {
@@ -601,6 +612,7 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
                     //soap_destroy(&soap2);
                     //soap_end(&soap2);
                     //soap_done(&soap2);
+                    m_oauth = NULL;
                     return result;
                 }
             }
@@ -615,6 +627,7 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
                 //soap_destroy(&soap2);
                 //soap_end(&soap2);
                 //soap_done(&soap2);
+                m_oauth = NULL;
                 return result;
             }
 
@@ -626,7 +639,7 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
             }
             else
             {
-                std::cerr << "Couldn't save attribute result to cache. Error: " << cacheFile.errorString().toStdString() << std::endl;
+                qDebug() << "Couldn't save attribute result to cache. Error: " << cacheFile.errorString();
 				parent->signalCacheNotWritable();
             }
         } else {
@@ -651,7 +664,7 @@ std::vector<ns2__AttributesType *> ScapServices::getAttributes(
         parent->signalSCAPDefinitionsServiceFail(GAPI::ScapGenericError, allEnterprises);
         qDebug() << "Error in getAttributes():" << ex.what();
     }
-
+    m_oauth = NULL;
     return result;
 }
 

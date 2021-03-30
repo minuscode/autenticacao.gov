@@ -1,6 +1,6 @@
 /*-****************************************************************************
 
- * Copyright (C) 2017-2020 Adriano Campos - <adrianoribeirocampos@gmail.com>
+ * Copyright (C) 2017-2021 Adriano Campos - <adrianoribeirocampos@gmail.com>
  * Copyright (C) 2017-2019 André Guerreiro - <aguerreiro1985@gmail.com>
  * Copyright (C) 2018-2020 Miguel Figueira - <miguel.figueira@caixamagica.pt>
  * Copyright (C) 2018-2019 Veniamin Craciun - <veniamin.craciun@caixamagica.pt>
@@ -14,6 +14,7 @@
 #include <QString>
 #include <QVector>
 #include <QDate>
+#include <QRegExp>
 #include <cstdio>
 #include <QQuickImageProvider>
 #include <QPrinter>
@@ -33,6 +34,7 @@
 #include "credentials.h"
 #include "Config.h"
 #include "Util.h"
+#include "MiscUtil.h"
 #include "proxyinfo.h"
 #include "concurrent.h"
 
@@ -618,6 +620,7 @@ void GAPI::showChangeAddressDialog(long code)
         error_msg += "<br><br>" + support_string_wait_5min;
     } else if (code != 0 && code != SAM_PROCESS_EXPIRED_ERROR){
         error_msg += "<br><br>" + support_string;
+        signalAddressShowLink();
     }
 
     qDebug() << error_msg;
@@ -630,11 +633,6 @@ void GAPI::showSignCMDDialog(long error_code)
     QString support_string = tr("STR_CMD_ERROR_MSG");
     QString urlLink = tr("STR_MAIL_SUPPORT");
 
-    if (error_code == 0 || error_code == EIDMW_TIMESTAMP_ERROR || error_code == EIDMW_LTV_ERROR){
-        PTEID_LOG(PTEID_LOG_LEVEL_CRITICAL, "eidgui", "CMD signature op finished with sucess");
-    } else {
-        PTEID_LOG(PTEID_LOG_LEVEL_ERROR, "eidgui", "CMD signature op finished with error code 0x%08x", error_code);
-    }
     switch (error_code)
     {
     case 0:
@@ -649,7 +647,19 @@ void GAPI::showSignCMDDialog(long error_code)
     case SCAP_SECRETKEY_ERROR_CODE:
         message = tr("STR_SCAP_SECRETKEY_ERROR");
         break;
-    case -1:
+    case SCAP_ATTR_POSSIBLY_EXPIRED_WARNING:
+        message = tr("STR_SCAP_SIGNATURE_ERROR") + "<br>" + tr("STR_SCAP_CHECK_EXPIRED_ATTR");
+        break;
+    case SCAP_ATTRIBUTES_EXPIRED:
+        message = tr("STR_SCAP_NOT_VALID_ATTRIBUTES");
+        break;
+    case SCAP_ZERO_ATTRIBUTES:
+        message = tr("STR_SCAP_NOT_VALID_ATTRIBUTES");
+        break;
+    case SCAP_ATTRIBUTES_NOT_VALID:
+        message = tr("STR_SCAP_NOT_VALID_ATTRIBUTES");
+        break;
+    case SOAP_EOF:
         message = tr("STR_CMD_TIMEOUT_ERROR");
         break;
     case ERR_GET_CERTIFICATE:
@@ -699,9 +709,18 @@ void GAPI::showSignCMDDialog(long error_code)
         // If there is error show message screen
         if (error_code == EIDMW_TIMESTAMP_ERROR || error_code == EIDMW_LTV_ERROR){
             signalUpdateProgressStatus(message);
-        } else if (error_code == SCAP_SECRETKEY_ERROR_CODE
-                || error_code == SCAP_CLOCK_ERROR_CODE) {
-            signalUpdateProgressStatus(message);
+        } 
+        else if (error_code == SCAP_SECRETKEY_ERROR_CODE
+                 || error_code == SCAP_ATTRIBUTES_EXPIRED
+                 || error_code == SCAP_ZERO_ATTRIBUTES
+                 || error_code == SCAP_ATTRIBUTES_NOT_VALID
+                 || error_code == SCAP_ATTR_POSSIBLY_EXPIRED_WARNING){
+            signalUpdateProgressStatus(tr("STR_POPUP_ERROR") + "! " + message);
+            signalShowLoadAttrButton();
+        }
+        else if (error_code == SCAP_CLOCK_ERROR_CODE){
+            signalUpdateProgressStatus(tr("STR_POPUP_ERROR") + "!");
+            signalShowMessage(message,"");
         } else {
             message += "<br><br>" + support_string;
             signalUpdateProgressStatus(tr("STR_POPUP_ERROR") + "!");
@@ -711,6 +730,15 @@ void GAPI::showSignCMDDialog(long error_code)
     else{
         // Success
         signalUpdateProgressStatus(message);
+    }
+
+    if (error_code == 0 || error_code == EIDMW_TIMESTAMP_ERROR || error_code == EIDMW_LTV_ERROR){
+        PTEID_LOG(PTEID_LOG_LEVEL_CRITICAL, "eidgui", 
+            "CMD signature op finished with sucess with error code 0x%08x", error_code);
+        emit signalOpenFile();
+    } else {
+        PTEID_LOG(PTEID_LOG_LEVEL_ERROR, "eidgui", 
+            "CMD signature op finished with error code 0x%08x", error_code);
     }
 
     qDebug() << "Show Sign CMD Dialog - Error code: " << error_code
@@ -864,10 +892,6 @@ void GAPI::doCloseSignCMD(CMDSignature *cmd_signature, QString sms_token)
 
     signCMDFinished(ret);
     signalUpdateProgressBar(100);
-    if (ret == 0 || ret == EIDMW_TIMESTAMP_ERROR || ret == EIDMW_LTV_ERROR)
-    {
-        emit signalOpenFile();
-    }
 }
 
 void GAPI::doCloseSignCMDWithSCAP(CMDSignature *cmd_signature, QString sms_token, QList<int> attribute_list) {
@@ -886,6 +910,7 @@ void GAPI::doCloseSignCMDWithSCAP(CMDSignature *cmd_signature, QString sms_token
             "CMD SignClose. Error code: %08x", e.GetError());
     }
 
+    // CMD signature success
     if (ret == 0 || ret == EIDMW_TIMESTAMP_ERROR || ret == EIDMW_LTV_ERROR)
     {
         try 
@@ -908,7 +933,7 @@ void GAPI::doCloseSignCMDWithSCAP(CMDSignature *cmd_signature, QString sms_token
             //The method returns something like "BI123456789";
             cmd_details.citizenId = QString(cmd_signature->getCertificateCitizenID() + 2);
 
-            scapServices.executeSCAPWithCMDSignature(this, m_scap_params.outputPDF, m_scap_params.page,
+            int ret_scap = scapServices.executeSCAPWithCMDSignature(this, m_scap_params.outputPDF, m_scap_params.page,
                 m_scap_params.location_x, m_scap_params.location_y,
                 m_scap_params.location, m_scap_params.reason, m_scap_params.isTimestamp, m_scap_params.isLtv, attrs, cmd_details,
                 useCustomSignature(), m_jpeg_scaled_data);
@@ -918,21 +943,24 @@ void GAPI::doCloseSignCMDWithSCAP(CMDSignature *cmd_signature, QString sms_token
 
             cmd_pdfSignatures.clear();
             cmd_signature->clear_pdf_handlers();
+
+            // SCAP signature with errors
+            if(ret_scap != GAPI::ScapSucess){
+                signalUpdateProgressBar(100);
+                return;
+            } 
         }
         catch (PTEID_Exception &e) {
             ret = e.GetError();
             PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_ERROR, "doCloseSignCMDWithSCAP",
                     "executeSCAPWithCMDSignature. Error code: %08x", e.GetError());
             }
-        }
+    }
     //TODO: reset the m_scap_params struct
 
     signCMDFinished(ret);
     signalUpdateProgressBar(100);
-    if (ret == 0 || ret == EIDMW_TIMESTAMP_ERROR || ret == EIDMW_LTV_ERROR)
-    {
-        emit signalOpenFile();
-    }
+
 }
 
 
@@ -998,8 +1026,9 @@ void GAPI::signOpenScapWithCMD(QString mobileNumber, QString secret_code, QList<
 		
         cmd_pdfSignatures.push_back(cmd_pdfSignature); // keep track of pointers to be deleted
         cmd_pdfSignature->setFileSigning((char *)getPlatformNativeString(fullInputPath));
-		PTEID_SignatureLevel sig_level = isLtv ? PTEID_LEVEL_LT : PTEID_LEVEL_BASIC;
-		cmd_pdfSignature->setSignatureLevel(sig_level);
+        PTEID_SignatureLevel sig_level = isTimestamp ?
+                (isLtv ? PTEID_LEVEL_LT : PTEID_LEVEL_TIMESTAMP) : PTEID_LEVEL_BASIC;
+        cmd_pdfSignature->setSignatureLevel(sig_level);
         cmd_signature->add_pdf_handler(cmd_pdfSignature);
     }
 
@@ -2301,9 +2330,17 @@ void GAPI::getSCAPEntities() {
     emit signalSCAPEntitiesLoaded(attributeSuppliers);
 }
 
+bool isSpecialValidity(QString value) {
+    QString year = "9999", month = "12", day = "31";
+    return value.contains(year) && value.contains(month) && value.contains(day);
+}
+
 std::vector<std::string> getChildAttributes(ns2__AttributesType *attributes, bool isShortDescription) {
     std::vector<std::string> childrensList;
 
+    if (attributes->SignedAttributes == NULL){
+            return childrensList;
+    }
     std::vector<ns5__SignatureType *> signatureAttributeList = attributes->SignedAttributes->ns3__SignatureAttribute;
 
     for (uint i = 0; i < signatureAttributeList.size(); i++) {
@@ -2313,6 +2350,7 @@ std::vector<std::string> getChildAttributes(ns2__AttributesType *attributes, boo
             ns5__ObjectType * signatureObject = signatureType->ns5__Object.at(0);
             ns3__PersonalDataType * personalDataObject = signatureObject->union_ObjectType.ns3__Attribute->PersonalData;
             ns3__MainAttributeType * mainAttributeObject = signatureObject->union_ObjectType.ns3__Attribute->MainAttribute;
+            std::string validity = signatureObject->union_ObjectType.ns3__Attribute->Validity;
 
             std::string name = personalDataObject->Name;
             childrensList.push_back(name.c_str());
@@ -2333,7 +2371,9 @@ std::vector<std::string> getChildAttributes(ns2__AttributesType *attributes, boo
 					if (subAttribute->Value != NULL) {
 						subValue += subAttribute->Value->c_str();
 					}
-					subAttributesValues.append(subDescription + ": " + subValue + ", ");
+					// Don't append special validity date -> "31 12 9999"
+					if (!isSpecialValidity(subValue))
+						subAttributesValues.append(subDescription + ": " + subValue + ", ");
 					subAttributePos++;
 				}
 				// Chop 2 to remove last 2 chars (', ')
@@ -2341,10 +2381,12 @@ std::vector<std::string> getChildAttributes(ns2__AttributesType *attributes, boo
 				subAttributes.append(subAttributesValues + ")");
 
 				/* qDebug() << "Sub attributes : " << subAttributes; */
-				description += subAttributes.toStdString();
+				if (subAttributes != " ()") // don't append empty parenthesis
+					description += subAttributes.toStdString();
 			}
 
             childrensList.push_back(description.c_str());
+            childrensList.push_back(validity);
         }
     }
     return childrensList;
@@ -2439,6 +2481,25 @@ void GAPI::getSCAPCompanyAttributes(bool useOAuth) {
     getSCAPAttributesFromCache(true,false);
 }
 
+bool GAPI::isAttributeExpired(std::string& date, std::string& supplier) {
+    QRegExp dateFormat("^\\d{4}-\\d{2}-\\d{2}$"); // xsd:date format
+    if (date.empty() || dateFormat.indexIn(date.c_str()) == -1) {
+        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_DEBUG, "eidgui",
+            "getSCAPAttributesFromCache: Bad date format in validity of attribute supplied by: '%s' -> '%s'", supplier.c_str(), date.c_str());
+            return false;
+    }
+
+    std::string today;
+    const char * format = "%Y-%m-%d"; // xsd:date format
+    CTimestampUtil::getTimestamp(today,0L,format);
+    bool isExpired = today.compare(date) > 0; // today is after validity -> expired
+    if (isExpired) {
+        PTEID_LOG(eIDMW::PTEID_LOG_LEVEL_DEBUG, "eidgui",
+            "getSCAPAttributesFromCache: Attribute supplied by: '%s' may be expired -> '%s'", supplier.c_str(), date.c_str());
+    }
+
+    return isExpired;
+}
 
 void GAPI::getSCAPAttributesFromCache(int scapAttrType, bool isShortDescription) {
 
@@ -2462,6 +2523,7 @@ void GAPI::getSCAPAttributesFromCache(int scapAttrType, bool isShortDescription)
         attributes = scapServices.reloadAttributesFromCache();
     }
 
+    QStringList possiblyExpiredSuppliers;
     for (uint i = 0; i < attributes.size(); i++) {
         //Skip malformed AttributeResponseValues element
         if (attributes.at(i)->ATTRSupplier == NULL) {
@@ -2470,10 +2532,14 @@ void GAPI::getSCAPAttributesFromCache(int scapAttrType, bool isShortDescription)
         std::string attrSupplier = attributes.at(i)->ATTRSupplier->Name;
         std::vector<std::string> childAttributes = getChildAttributes(attributes.at(i), isShortDescription);
 
-        for (uint j = 0; j < childAttributes.size(); j = j + 2) {
+        for (uint j = 0; j < childAttributes.size(); j = j + 3) {
             attribute_list.append(QString::fromStdString(attrSupplier));
             attribute_list.append(QString::fromStdString(childAttributes.at(j)));
             attribute_list.append(QString::fromStdString(childAttributes.at(j + 1)));
+            //check validity of attributes
+            if (isAttributeExpired(childAttributes.at(j + 2), attrSupplier)) {
+                possiblyExpiredSuppliers.push_back(QString::fromStdString(attrSupplier));
+            }
         }
     }
     if (scapAttrType == ScapAttrEntities)
@@ -2482,6 +2548,11 @@ void GAPI::getSCAPAttributesFromCache(int scapAttrType, bool isShortDescription)
         emit signalCompanyAttributesLoaded(attribute_list);
     else if (scapAttrType == ScapAttrAll)
         emit signalAttributesLoaded(attribute_list);
+
+    if (!possiblyExpiredSuppliers.empty()) {
+        possiblyExpiredSuppliers.removeDuplicates();
+        emit signalAttributesPossiblyExpired(possiblyExpiredSuppliers);
+    }
 }
 
 void GAPI::removeSCAPAttributesFromCache(int scapAttrType) {
@@ -2878,8 +2949,12 @@ void cardEventCallback(long lRet, unsigned long ulState, CallBackData* pCallBack
             pCallBackData->getMainWnd()->setAddressLoaded(false);
             pCallBackData->getMainWnd()->resetReaderSelected();
 
+            const char * tmp = readerContext.getEIDCard().getVersionInfo().getSerialNumber();
+            if (tmp) PTEID_LOG(PTEID_LOG_LEVEL_CRITICAL, "eidgui", 
+                "Card inserted with serial number (last 3): %s", tmp + strlen(tmp) - 3);
+
             PTEID_LOG(PTEID_LOG_LEVEL_DEBUG, "eidgui",
-                "Card inserted with serial number: %s", readerContext.getEIDCard().getVersionInfo().getSerialNumber());
+                "Card inserted with serial number: %s", tmp);
 
             //------------------------------------
             // register certificates when needed

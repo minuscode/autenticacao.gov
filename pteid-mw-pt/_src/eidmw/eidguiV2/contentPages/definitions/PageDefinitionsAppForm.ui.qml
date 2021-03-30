@@ -1,6 +1,6 @@
 /*-****************************************************************************
 
- * Copyright (C) 2017-2020 Adriano Campos - <adrianoribeirocampos@gmail.com>
+ * Copyright (C) 2017-2021 Adriano Campos - <adrianoribeirocampos@gmail.com>
  * Copyright (C) 2018-2019 Miguel Figueira - <miguelblcfigueira@gmail.com>
  * Copyright (C) 2018 Veniamin Craciun - <veniamin.craciun@caixamagica.pt>
  * Copyright (C) 2019 João Pinheiro - <joao.pinheiro@caixamagica.pt>
@@ -831,7 +831,9 @@ Item {
                     id: rectDebugModeCheckBox
                     width: parent.width
                     color: "white"
-                    height: debugModeTextField.height + checkboxDebugMode.height + 3*Constants.SIZE_TEXT_V_SPACE
+                    height: debugModeTextField.height + checkboxDebugMode.height
+                            + logsTextField.height + 10 * Constants.SIZE_TEXT_V_SPACE
+                            + debugInfoLink.height
                     anchors.top: dateDebugMode.bottom
                     anchors.topMargin: Constants.SIZE_TEXT_V_SPACE
 
@@ -869,20 +871,90 @@ Item {
                         font.capitalization: Font.MixedCase
                         font.bold: activeFocus
                         anchors.top: debugModeTextField.bottom
-                        anchors.topMargin: Constants.SIZE_TEXT_V_SPACE
+                        anchors.topMargin: 2 * Constants.SIZE_TEXT_V_SPACE
                         Accessible.role: Accessible.CheckBox
                         Accessible.name: text
                         Keys.onPressed: {
                             handleKeyPressed(event.key, checkboxDebugMode)
                         }
-                        KeyNavigation.tab: dateAppGraphics
-                        KeyNavigation.down: dateAppGraphics
-                        KeyNavigation.right: dateAppGraphics
+                        KeyNavigation.tab: buttonZipLogs
+                        KeyNavigation.down: buttonZipLogs
+                        KeyNavigation.right: buttonZipLogs
                         KeyNavigation.backtab: debugModeTextField
                         KeyNavigation.up: debugModeTextField
                         KeyNavigation.left: debugModeTextField
                         Keys.onEnterPressed: toggleSwitch(checkboxDebugMode)
                         Keys.onReturnPressed: toggleSwitch(checkboxDebugMode)
+                    }
+                    Button {
+                        id: buttonZipLogs
+                        text: qsTranslate("PageDefinitionsApp", "STR_LOG_ZIP_BUTTON")  + controler.autoTr
+                        anchors.right: parent.right
+                        anchors.rightMargin: Constants.SIZE_TEXT_FIELD_H_SPACE
+                        anchors.verticalCenter: checkboxDebugMode.verticalCenter
+                        width: 1.4 * Constants.WIDTH_BUTTON
+                        height: Constants.HEIGHT_BOTTOM_COMPONENT
+                        font.pixelSize: Constants.SIZE_TEXT_FIELD
+                        font.family: lato.name
+                        font.capitalization: Font.MixedCase
+                        highlighted: activeFocus
+                        KeyNavigation.tab: logsTextField
+                        KeyNavigation.down: logsTextField
+                        KeyNavigation.right: logsTextField
+                        KeyNavigation.left: checkboxDebugMode
+                        KeyNavigation.backtab: checkboxDebugMode
+                        KeyNavigation.up: checkboxDebugMode
+                        onClicked: {
+                            controler.zipLogs()
+                        }
+                    }
+                    Text {
+                        id: logsTextField
+                        width: parent.width - 20
+                        anchors.top: checkboxDebugMode.bottom
+                        anchors.topMargin: 3 * Constants.SIZE_TEXT_V_SPACE
+                        x:10
+                        font.capitalization: Font.MixedCase
+                        font.pixelSize: Constants.SIZE_TEXT_FIELD
+                        font.family: lato.name
+                        font.bold: activeFocus
+                        wrapMode: Text.WordWrap
+                        text: qsTranslate("PageDefinitionsApp", "STR_LOG_ZIP_DESCRIPTION") + controler.autoTr
+                        Accessible.role: Accessible.StaticText
+                        Accessible.name: text
+                        Keys.onPressed: {
+                            handleKeyPressed(event.key, logsTextField)
+                        }
+                        KeyNavigation.tab: debugInfoLink
+                        KeyNavigation.down: debugInfoLink
+                        KeyNavigation.right: debugInfoLink
+                        KeyNavigation.backtab: buttonZipLogs
+                        KeyNavigation.up: buttonZipLogs
+                        KeyNavigation.left: buttonZipLogs
+                    }
+                    Components.Link {
+                        id: debugInfoLink
+                        x: 10
+                        anchors.top: logsTextField.bottom
+                        anchors.topMargin: 2* Constants.SIZE_TEXT_V_SPACE
+                        width: parent.width
+                        propertyText.text:  qsTranslate("PageDefinitionsApp", "STR_MORE_INFO") + controler.autoTr + " "
+                                            + "<a href='https://amagovpt.github.io/docs.autenticacao.gov/user_manual.html#obtenção-do-relatório-para-análise-através-do-menu-configurações'>"
+                                            + qsTranslate("PageDefinitionsApp", "STR_HERE") + controler.autoTr
+                        propertyLinkUrl: 'https://amagovpt.github.io/docs.autenticacao.gov/user_manual.html#obtenção-do-relatório-para-análise-através-do-menu-configurações'
+                        propertyText.font.capitalization: Font.MixedCase
+                        propertyText.font.pixelSize: Constants.SIZE_TEXT_LINK_LABEL
+                        propertyAccessibleText: qsTranslate("PageDefinitionsApp", "STR_MORE_INFO") + " "
+                                            + qsTranslate("PageDefinitionsApp", "STR_HERE")
+                        KeyNavigation.tab: dateAppGraphics
+                        KeyNavigation.down: dateAppGraphics
+                        KeyNavigation.right: dateAppGraphics
+                        Keys.onPressed: {
+                            handleKeyPressed(event.key, debugInfoLink)
+                        }
+                        KeyNavigation.left: logsTextField
+                        KeyNavigation.backtab: logsTextField
+                        KeyNavigation.up: logsTextField
                     }
                 }
             }
@@ -916,9 +988,9 @@ Item {
                     KeyNavigation.tab: graphicsTextField
                     KeyNavigation.down: graphicsTextField
                     KeyNavigation.right: graphicsTextField
-                    KeyNavigation.backtab: checkboxDebugMode
-                    KeyNavigation.up: checkboxDebugMode
-                    KeyNavigation.left: checkboxDebugMode
+                    KeyNavigation.backtab: logsTextField
+                    KeyNavigation.up: logsTextField
+                    KeyNavigation.left: logsTextField
                 }
                 DropShadow {
                     anchors.fill: rectAppGraphicsCheckBox
@@ -977,9 +1049,9 @@ Item {
                         anchors.topMargin: Constants.SIZE_TEXT_V_SPACE
                         width: parent.width
                         propertyText.text:  qsTranslate("PageDefinitionsApp", "STR_MORE_INFO") + controler.autoTr + " "
-                                            + "<a href='https://amagovpt.github.io/autenticacao.gov/user_manual.html#problemas-gráficos-na-aplicação'>"
+                                            + "<a href='https://amagovpt.github.io/docs.autenticacao.gov/user_manual.html#problemas-gráficos-na-aplicação'>"
                                             + qsTranslate("PageDefinitionsApp", "STR_HERE") + controler.autoTr
-                        propertyLinkUrl: 'https://amagovpt.github.io/autenticacao.gov/user_manual.html#problemas-gráficos-na-aplicação'
+                        propertyLinkUrl: 'https://amagovpt.github.io/docs.autenticacao.gov/user_manual.html#problemas-gráficos-na-aplicação'
                         propertyText.font.capitalization: Font.MixedCase
                         propertyText.font.pixelSize: Constants.SIZE_TEXT_LINK_LABEL
                         propertyAccessibleText: qsTranslate("PageDefinitionsApp", "STR_MORE_INFO") + " "
@@ -987,6 +1059,9 @@ Item {
                         KeyNavigation.tab: textGraphicsRendering
                         KeyNavigation.down: textGraphicsRendering
                         KeyNavigation.right: textGraphicsRendering
+                        Keys.onPressed: {
+                            handleKeyPressed(event.key, textLink)
+                        }
                         KeyNavigation.left: graphicsTextField
                         KeyNavigation.backtab: graphicsTextField
                         KeyNavigation.up: graphicsTextField

@@ -721,7 +721,7 @@ DHParamsResponse *SSLConnection::do_SAM_1stpost(DHParams *p, char *secretCode, c
 	
 	if (ret > 0)
 	{
-		MWLOG(LEV_DEBUG, MOD_APL, "do_SAM_1stpost: Server reply: %s", buffer.buf);
+		MWLOG(LEV_DEBUG, MOD_APL, "do_SAM_1stpost: Server reply (%u bytes): %s", ret, buffer.buf);
 		m_session_cookie = parseCookie(buffer.buf);
 		if (m_session_cookie == NULL)
 		{
@@ -737,8 +737,7 @@ DHParamsResponse *SSLConnection::do_SAM_1stpost(DHParams *p, char *secretCode, c
 	char *body = skipHTTPHeaders(buffer.buf);
 
 	json = cJSON_Parse(body);
-	cJSON *my_json = json->child;
-	if (my_json == NULL)
+	if (json == NULL)
 	{
 		fprintf(stderr, "DEBUG: Server returned malformed JSON data: %s\n", body);
 		free(buffer.buf);
@@ -746,6 +745,8 @@ DHParamsResponse *SSLConnection::do_SAM_1stpost(DHParams *p, char *secretCode, c
         cJSON_Delete(json);
 		return server_params;
 	}
+
+	cJSON *my_json = json->child;
 
 	handleErrorCode(my_json, __FUNCTION__);
 
@@ -1292,10 +1293,13 @@ void SSLConnection::read_chunked_reply(SSL *ssl, NetworkBuffer *net_buffer, bool
 			//Double the buffer length
 			current_buf_length *= 2;
 
+			MWLOG(LEV_DEBUG, MOD_APL, "Double the buffer length (size=%d): ", current_buf_length);
+
 			net_buffer->buf = (char*)realloc(net_buffer->buf, current_buf_length);
 			net_buffer->buf_size = current_buf_length;
 			if (!net_buffer->buf) {
 				fprintf(stderr, "Critical error: out of memory!\n");
+				MWLOG(LEV_ERROR, MOD_APL, "Critical error: out of memory!");
 				exit(1);
 			}
 			buffer = net_buffer->buf;
@@ -1318,6 +1322,8 @@ unsigned int SSLConnection::read_from_stream(SSL* ssl, NetworkBuffer *net_buffer
 	int r = -1;
 	unsigned int bytes_read = 0, header_len = 0, content_length = 0;
 	unsigned int current_buf_length = net_buffer->buf_size;
+	const char * eoh_token     = "\r\n\r\n";
+	const size_t eoh_token_len = 4;
 
 	do
 	{
@@ -1326,10 +1332,17 @@ unsigned int SSLConnection::read_from_stream(SSL* ssl, NetworkBuffer *net_buffer
 		if (r > 0)
 		{
 			if (bytes_read == 0) {
-				header_len = r;
+
 				char * buffer_tmp = (char*)calloc(strlen(net_buffer->buf) + 1, 1);
 				strcpy(buffer_tmp, net_buffer->buf);
 				content_length = parseContentLength(buffer_tmp);
+				if (content_length > 0 && header_len == 0) {
+					char *end_of_headers = strstr(net_buffer->buf, eoh_token);
+					if (end_of_headers) {
+						header_len = (end_of_headers-net_buffer->buf) + eoh_token_len;
+					}
+				}
+
 				free(buffer_tmp);
 			}
 

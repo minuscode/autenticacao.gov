@@ -328,68 +328,69 @@ void Catalog::fillSignatureField(Object *signature_field, PDFRectangle *rect, in
 
 void Catalog::addSigFieldToAcroForm(Ref *sig_ref, Ref *refFirstPage)
 {
-  Object acroform, local_acroForm, fields_array, ref_to_sig, obj;
+    Object acroform, local_acroForm, fields_array, ref_to_sig, obj;
 
-  ref_to_sig.initRef(sig_ref->num, sig_ref->gen);
+    ref_to_sig.initRef(sig_ref->num, sig_ref->gen);
 
-  if (refFirstPage)
-  {
-    addSigRefToPage(refFirstPage, &ref_to_sig);
-  }
-
-  catDict.dictLookup("AcroForm", &local_acroForm);
-
-  Object acroForm_ref;
-
-  //PDF File has no AcroForm dict, we need to create it
-  if (!local_acroForm.isDict())
-  {
-
-    Object fields;
-    acroform.initDict(xref);
-    fields.initArray(xref);
-
-    acroform.dictAdd(copyString("Fields"), &fields);
-    acroform.dictAdd(copyString("SigFlags"), obj.initInt(3));
-    //catDict.dictAdd(copyString("AcroForm"), &acroform);
-    local_acroForm = acroform;
-  }
-  else
-  {
-    catDict.dictLookupNF("AcroForm", &acroForm_ref);
-
-    fprintf(stderr, "local_acroform is a dict!\n");
-    setSigFlags(&local_acroForm, 3);
-  }
-
-  Object o1;
-  o1.initNull();
-  //Remove NeedApperances field if present
-  local_acroForm.dictSet("NeedAppearances", &o1);
-
-  local_acroForm.dictLookup("Fields", &fields_array);
-  if (fields_array.isArray())
-  {
-    Object fields_ref;
-    local_acroForm.dictLookupNF("Fields", &fields_ref);
-    fields_array.arrayAdd(&ref_to_sig);
-
-    if (fields_ref.isRef())
+    if (refFirstPage)
     {
-      xref->setModifiedObject(&fields_array, fields_ref.getRef());
+        addSigRefToPage(refFirstPage, &ref_to_sig);
     }
-  }
 
-  //Set the catalog object as modified to force rewrite
-  Ref catalog_ref;
-  catalog_ref.gen = xref->getRootGen();
-  catalog_ref.num = xref->getRootNum();
-  catDict.dictAdd(copyString("AcroForm"), &local_acroForm);
+    catDict.dictLookup("AcroForm", &local_acroForm);
 
-  //By the spec we should be handling the case
-  //where the acroform object is compressed and we're doing
-  //an incremental update to sign. For now it works as is...
-  /*
+    Object acroForm_ref;
+
+    //PDF File has no AcroForm dict, we need to create it
+    if (!local_acroForm.isDict())
+    {
+
+        Object fields;
+        acroform.initDict(xref);
+        fields.initArray(xref);
+
+        acroform.dictAdd(copyString("Fields"), &fields);
+        acroform.dictAdd(copyString("SigFlags"), obj.initInt(3));
+        local_acroForm = acroform;
+        catDict.dictAdd(copyString("AcroForm"), &local_acroForm);
+    }
+    else
+    {
+        catDict.dictLookupNF("AcroForm", &acroForm_ref);
+
+        fprintf(stderr, "local_acroform is a dict!\n");
+        setSigFlags(&local_acroForm, 3);
+
+    }
+
+    Object o1;
+    o1.initNull();
+    //Remove NeedApperances field if present
+    local_acroForm.dictSet("NeedAppearances", &o1);
+
+    local_acroForm.dictLookup("Fields", &fields_array);
+    if (fields_array.isArray())
+    {
+        Object fields_ref;
+        local_acroForm.dictLookupNF("Fields", &fields_ref);
+        fields_array.arrayAdd(&ref_to_sig);
+
+        if (fields_ref.isRef())
+        {
+            xref->setModifiedObject(&fields_array, fields_ref.getRef());
+
+        }
+    }
+
+    //Set the catalog object as modified to force rewrite
+    Ref catalog_ref;
+    catalog_ref.gen = xref->getRootGen();
+    catalog_ref.num = xref->getRootNum();
+
+    //By the spec we should be handling the case
+    //where the acroform object is compressed and we're doing 
+    //an incremental update to sign. For now it works as is...
+    /*
     if (m_is_compressed) // && is_incremental
     {
         DeflateStream *str = new DeflateStream(&catDict);
@@ -507,47 +508,45 @@ void Catalog::prepareSignature(PDFRectangle *rect, SignatureSignerInfo *signer_i
 	  offsets in the XRef table are unchanged when the real signature is
 	  added
 	*/
-  char *placeholder = (char *)gmalloc(PLACEHOLDER_LEN + 1);
-  memset(placeholder, '0', PLACEHOLDER_LEN);
-  placeholder[PLACEHOLDER_LEN] = '\0';
+	char * placeholder = (char *)gmalloc(PLACEHOLDER_LEN+1);
+	memset(placeholder, '0', PLACEHOLDER_LEN);
+	placeholder[PLACEHOLDER_LEN] = '\0';
 
-  signature_dict->initSignatureDict(xref);
 
-  GooString *sig_content = new GooString(placeholder);
-  sig_content->setHexString();
-  signature_dict->dictAdd(copyString("Type"), obj3.initName("Sig"));
+	signature_dict->initSignatureDict(xref);
+	
+	GooString * sig_content = new GooString(placeholder);
+	sig_content->setHexString();
+	signature_dict->dictAdd(copyString("Type"), obj3.initName("Sig"));
 
-  signature_dict->dictAdd(copyString("Contents"), obj1.initString(sig_content));
-  signature_dict->dictAdd(copyString("SubFilter"), obj1.initName("ETSI.CAdES.detached"));
+	signature_dict->dictAdd(copyString("Contents"), obj1.initString(sig_content));
+	signature_dict->dictAdd(copyString("SubFilter"), obj1.initName("ETSI.CAdES.detached"));
 
-  char *name_latin1 = utf8_to_latin1(signer_info->name);
-  signature_dict->dictAdd(copyString("Name"), obj1.initString(new GooString(name_latin1)));
+	signature_dict->dictAdd(copyString("Name"), obj1.initString(new GooString("")));
 
-  build_prop.initDict(xref);
-  build_prop_app.initDict(xref);
+	build_prop.initDict(xref);
+	build_prop_app.initDict(xref);
 
-  //Add name and version of the Signature Creation App to the Build_Prop->App Dictionary
-  build_prop_app.dictAdd(copyString("REx"), obj1.initString(
-                                                new GooString(PTEID_PRODUCT_VERSION "-" REVISION_NUM_STRING)));
-  build_prop_app.dictAdd(copyString("Name"), obj1.initName("Portugal eID Middleware"));
-#ifdef _WIN32
-  build_prop_app.dictAdd(copyString("OS"), obj1.initName("Win"));
-#elif __APPLE__
-  build_prop_app.dictAdd(copyString("OS"), obj1.initName("MacOS"));
+	//Add name and version of the Signature Creation App to the Build_Prop->App Dictionary
+	build_prop_app.dictAdd(copyString("REx"), obj1.initString(
+		new GooString(PTEID_PRODUCT_VERSION "-" REVISION_NUM_STRING)));
+	build_prop_app.dictAdd(copyString("Name"), obj1.initName("Portugal eID Middleware"));
+#ifdef _WIN32	
+	build_prop_app.dictAdd(copyString("OS"), obj1.initName("Win"));
+#elif __APPLE__	
+	build_prop_app.dictAdd(copyString("OS"), obj1.initName("MacOS"));
 #else
   build_prop_app.dictAdd(copyString("OS"), obj1.initName("Linux"));
 #endif
 
-  build_prop.dictAdd(copyString("App"), &build_prop_app);
+	build_prop.dictAdd(copyString("App"), &build_prop_app);
 
-  free(name_latin1);
+	const char *loc = location != NULL ? utf8_to_latin1(location) : "";
+	signature_dict->dictAdd(copyString("Location"), obj1.initString(new GooString(loc)));
 
-  const char *loc = location != NULL ? utf8_to_latin1(location) : "";
-  signature_dict->dictAdd(copyString("Location"), obj1.initString(new GooString(loc)));
-
-  const char *rea = reason != NULL ? utf8_to_latin1(reason) : "";
-  signature_dict->dictAdd(copyString("Reason"), obj1.initString(new GooString(rea)));
-  /* TODO: initialize pdf_date for Mac and Linux
+	const char *rea = reason != NULL ? utf8_to_latin1(reason): "";
+	signature_dict->dictAdd(copyString("Reason"), obj1.initString(new GooString(rea)));
+	/* TODO: initialize pdf_date for Mac and Linux
 	if (strftime(date_outstr, sizeof(date_outstr), "D:%Y%m%d%H%M%S+00'00'", tmp_date) == 0) {
                fprintf(stderr, "strftime returned 0");
     }
