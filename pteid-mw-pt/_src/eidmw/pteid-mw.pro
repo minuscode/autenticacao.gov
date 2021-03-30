@@ -25,11 +25,11 @@ SUBDIRS +=	pkcs11/pkcs11.pro \
 applayer.depends = pteid-poppler		
 
 #Uncomment to build the V2-specific projects
-#SUBDIRS += eidgui
-#SUBDIRS += scap-client-v2
+##SUBDIRS += eidgui
+##SUBDIRS += scap-client-v2
 
-SUBDIRS += CMD/services/cmdServices.pro
-SUBDIRS += eidguiV2
+##SUBDIRS += CMD/services/cmdServices.pro
+##SUBDIRS += eidguiV2
 
 ## the subdirs have to be built in the given order
 CONFIG += ordered
