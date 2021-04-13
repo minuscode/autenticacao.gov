@@ -69,7 +69,8 @@ class PDFRectangle;
 // NameTree
 //------------------------------------------------------------------------
 
-class NameTree {
+class NameTree
+{
 public:
   NameTree();
   ~NameTree();
@@ -81,7 +82,8 @@ public:
   GooString *getName(int i);
 
 private:
-  struct Entry {
+  struct Entry
+  {
     Entry(Array *array, int index);
     ~Entry();
     GooString name;
@@ -101,23 +103,23 @@ private:
                     // length is the number of real Entry
 };
 
-
-class SignatureSignerInfo {
+class SignatureSignerInfo
+{
 public:
-  const char * name;
-  const char * civil_number;
+  const char *name;
+  const char *civil_number;
   //Professional attributes info
-  const char * attribute_provider;
-  const char * attribute_name;
+  const char *attribute_provider;
+  const char *attribute_name;
 };
 
 //------------------------------------------------------------------------
 // Catalog
 //------------------------------------------------------------------------
 
-class Catalog {
+class Catalog
+{
 public:
-
   // Constructor.
   Catalog(PDFDoc *docA);
 
@@ -129,10 +131,10 @@ public:
 
   GBool setSigFlags(Object *obj, int value);
 
-  GBool addSigRefToPage(Ref *, Object* sig_ref);
+  GBool addSigRefToPage(Ref *, Object *sig_ref);
 
   int setSignatureByteRange(unsigned long sig_contents_offset, unsigned long estimated_len,
-		  unsigned long filesize, Object *signature_dict = NULL, Ref *signature_dict_ref = NULL);
+                            unsigned long filesize, Object *signature_dict = NULL, Ref *signature_dict_ref = NULL);
 
   // Get number of pages.
   int getNumPages();
@@ -142,26 +144,26 @@ public:
   void setIncrementalSignature(bool);
 
   void prepareSignature(PDFRectangle *rect, SignatureSignerInfo *signer_info, Ref *first_page_ref, const char *location,
-	                      const char *reason, unsigned long, int page, int sig_sector, 
-    unsigned char *img_data, unsigned long img_length, bool isPTLanguage, bool isCCSignature);
-  
+                        const char *reason, unsigned long, int page, int sig_sector,
+                        unsigned char *img_data, unsigned long img_length, bool isPTLanguage, bool isCCSignature);
+
   Ref addFontDict(const char *basefont, const char *name);
   Ref addImageXObject(int width, int height, unsigned char *data, unsigned long length_in_bytes);
 
   Ref newXObject(char *plain_text_stream,
-	 int height, int width, bool needs_font, bool needs_image, unsigned char *img_data = NULL, unsigned long img_length = 0);
+                 int height, int width, bool needs_font, bool needs_image, unsigned char *img_data = NULL, unsigned long img_length = 0);
 
   void addSignatureAppearance(Object *signature_field, SignatureSignerInfo *signer_info,
-	     char *date_str,	const char* location, const char* reason, int rect_x, int rect_y,
-		 unsigned char *img_data, unsigned long img_length, int rotate_signature, bool isPTLanguage);
+                              char *date_str, const char *location, const char *reason, int rect_x, int rect_y,
+                              unsigned char *img_data, unsigned long img_length, int rotate_signature, bool isPTLanguage);
   void addSignatureAppearanceSCAP(Object *signature_field, SignatureSignerInfo *signer_info,
-             char *date_str,	const char* location, const char* reason, int rect_x, int rect_y,
-                 unsigned char *img_data, unsigned long img_length, int rotate_signature, bool isPTLanguage);
+                                  char *date_str, const char *location, const char *reason, int rect_x, int rect_y,
+                                  unsigned char *img_data, unsigned long img_length, int rotate_signature, bool isPTLanguage);
   void addSignatureAppearance(Object *parent, int, int);
   void closeSignature(const char *signature_contents, unsigned long len);
 
   /* Fill the following keys of the signature field dictionary: Type, SubType, FT, F, SigSector, Rect, T and P.*/
-  void fillSignatureField(Object *signatureFieldDict, PDFRectangle *rect, int sig_sector, Ref *refFirstPage);
+  void fillSignatureField(Object *signatureFieldDict, PDFRectangle *rect, int sig_sector, Ref *refFirstPage, int extra);
   void addSigFieldToAcroForm(Ref *sigFieldRef, Ref *refFirstPage);
 
   // Get a page.
@@ -217,11 +219,12 @@ public:
 
   OCGs *getOptContentConfig() { return optContent; }
 
-  Form* getForm();
+  Form *getForm();
 
   ViewerPreferences *getViewerPreferences();
 
-  enum PageMode {
+  enum PageMode
+  {
     pageModeNone,
     pageModeOutlines,
     pageModeThumbs,
@@ -230,7 +233,8 @@ public:
     pageModeAttach,
     pageModeNull
   };
-  enum PageLayout {
+  enum PageLayout
+  {
     pageLayoutNone,
     pageLayoutSinglePage,
     pageLayoutOneColumn,
@@ -246,14 +250,13 @@ public:
   PageLayout getPageLayout();
 
 private:
-
   // Get page label info.
   PageLabelInfo *getPageLabelInfo();
 
   PDFDoc *doc;
-  XRef *xref;			// the xref table for this PDF file
-  Page **pages;			// array of pages
-  Ref *pageRefs;		// object ID for each page
+  XRef *xref;    // the xref table for this PDF file
+  Page **pages;  // array of pages
+  Ref *pageRefs; // object ID for each page
   int lastCachedPage;
   std::vector<Dict *> *pagesList;
   std::vector<Ref> *pagesRefList;
@@ -261,32 +264,32 @@ private:
   std::vector<int> *kidsIdxList;
   Form *form;
   ViewerPreferences *viewerPrefs;
-  Object catDict;       //****Signing patch**** The actual raw dict, for later modification
- // bool m_is_compressed;	   	//is the catalog object compressed, this matter if we need to change it
+  Object catDict; //****Signing patch**** The actual raw dict, for later modification
+                  // bool m_is_compressed;	   	//is the catalog object compressed, this matter if we need to change it
   Ref m_sig_ref;
   Object *m_sig_dict;
   bool incremental_update;
   bool small_signature_format;
 
-  int numPages;			// number of pages
-  int pagesSize;		// size of pages array
-  Object dests;			// named destination dictionary
-  Object names;			// named names dictionary
-  NameTree *destNameTree;	// named destination name-tree
-  NameTree *embeddedFileNameTree;  // embedded file name-tree
-  NameTree *jsNameTree;		// Java Script name-tree
-  GooString *baseURI;		// base URI for URI-type links
-  Object metadata;		// metadata stream
-  Object structTreeRoot;	// structure tree root dictionary
-  Object outline;		// outline dictionary
-  Object acroForm;		// AcroForm dictionary
-  Object dss;		// DSS dictionary
-  Object viewerPreferences;     // ViewerPreference dictionary
-  OCGs *optContent;		// Optional Content groups
-  GBool ok;			// true if catalog is valid
-  PageLabelInfo *pageLabelInfo; // info about page labels
-  PageMode pageMode;		// page mode
-  PageLayout pageLayout;	// page layout
+  int numPages;                   // number of pages
+  int pagesSize;                  // size of pages array
+  Object dests;                   // named destination dictionary
+  Object names;                   // named names dictionary
+  NameTree *destNameTree;         // named destination name-tree
+  NameTree *embeddedFileNameTree; // embedded file name-tree
+  NameTree *jsNameTree;           // Java Script name-tree
+  GooString *baseURI;             // base URI for URI-type links
+  Object metadata;                // metadata stream
+  Object structTreeRoot;          // structure tree root dictionary
+  Object outline;                 // outline dictionary
+  Object acroForm;                // AcroForm dictionary
+  Object dss;                     // DSS dictionary
+  Object viewerPreferences;       // ViewerPreference dictionary
+  OCGs *optContent;               // Optional Content groups
+  GBool ok;                       // true if catalog is valid
+  PageLabelInfo *pageLabelInfo;   // info about page labels
+  PageMode pageMode;              // page mode
+  PageLayout pageLayout;          // page layout
 
   GBool useCCLogo;
 
@@ -297,7 +300,6 @@ private:
   NameTree *getDestNameTree();
   NameTree *getEmbeddedFileNameTree();
   NameTree *getJSNameTree();
-
 };
 
 #endif

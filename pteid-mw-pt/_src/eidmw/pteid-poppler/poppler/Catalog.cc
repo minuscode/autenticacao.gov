@@ -282,7 +282,7 @@ fallback:
 
 #endif
 
-void Catalog::fillSignatureField(Object *signature_field, PDFRectangle *rect, int sig_sector, Ref *refFirstPage)
+void Catalog::fillSignatureField(Object *signature_field, PDFRectangle *rect, int sig_sector, Ref *refFirstPage, int extra)
 {
   Object obj1, obj2, obj3, obj4;
 
@@ -308,7 +308,7 @@ void Catalog::fillSignatureField(Object *signature_field, PDFRectangle *rect, in
     r0 = rect->x1;
     r1 = rect->y1;
     r2 = rect->x2;
-    r3 = rect->y2;
+    r3 = rect->y2 + extra;
   }
   obj4.arrayAdd(obj2.initReal(r0));
   obj4.arrayAdd(obj2.initReal(r1));
@@ -475,7 +475,22 @@ void Catalog::prepareSignature(PDFRectangle *rect, SignatureSignerInfo *signer_i
 
   Ref *refFirstPage = firstPageRef != NULL ? firstPageRef : &(pageRefs[page - 1]);
   signature_field.initDict(xref);
-  fillSignatureField(&signature_field, rect, sig_sector, refFirstPage);
+
+  int extra = 0;
+
+  if (reason != NULL && strlen(reason) > 0)
+  {
+    int defaultSize = 100; // 2 lines * 50 chars per line
+    int strLen = strlen(reason);
+
+    if (strLen > defaultSize)
+    {
+      extra = (((strLen - defaultSize) / 50) * 10) * 2;
+      printf("extra %i\n", extra);
+    }
+  }
+
+  fillSignatureField(&signature_field, rect, sig_sector, refFirstPage, extra);
   Object obj1, obj2, obj3, ref_to_dict;
 
   Page *page_obj = getPage(page);
@@ -1117,6 +1132,7 @@ void Catalog::addSignatureAppearance(Object *signature_field, SignatureSignerInf
   int rect_width = ((rotate_signature == 90 || rotate_signature == 270) ? rect_y : rect_x);
   int rect_height = ((rotate_signature == 90 || rotate_signature == 270) ? rect_x : rect_y);
   bool horizontal = rect_width > rect_height;
+  int height = rect_y;
 
   if (horizontal && reason != NULL && strlen(reason) > 0)
   {
@@ -1128,13 +1144,17 @@ void Catalog::addSignatureAppearance(Object *signature_field, SignatureSignerInf
 
     if (strLen > defaultSize)
     {
+      //strLen 392
+      //rect_height 89
+      //rect_height++ 139
       rect_height = rect_height + (((strLen - defaultSize) / 50) * line_height);
       printf("rect_height++ %i\n", rect_height);
+      height = rect_height + rect_y;
     }
   }
 
   //Start with Italics font
-  GooString *n2_commands = GooString::format(commands_template.c_str(), rect_height - 10, (int)font_size);
+  GooString *n2_commands = GooString::format(commands_template.c_str(), height - 10, (int)font_size);
 
   if (!small_signature_format && reason != NULL && strlen(reason) > 0)
   {
@@ -1228,11 +1248,11 @@ void Catalog::addSignatureAppearance(Object *signature_field, SignatureSignerInf
   resources.dictAdd(copyString("ProcSet"), &procset);
 
   xobject_layers.initDict(xref);
-  Ref n2_layer = newXObject(n2_commands->getCString(), rect_width, rect_height, true, true, img_data, img_length);
+  Ref n2_layer = newXObject(n2_commands->getCString(), rect_width, horizontal ? height : rect_y, true, true, img_data, img_length);
   ref_to_n2.initRef(n2_layer.num, n2_layer.gen);
   xobject_layers.dictAdd(copyString("n2"), &ref_to_n2);
 
-  Ref n0_layer = newXObject(n0_commands, rect_x, rect_y, false, false);
+  Ref n0_layer = newXObject(n0_commands, rect_x, horizontal ? height : rect_y, false, false);
   ref_to_n0.initRef(n0_layer.num, n0_layer.gen);
   xobject_layers.dictAdd(copyString("n0"), &ref_to_n0);
 
@@ -1248,7 +1268,7 @@ void Catalog::addSignatureAppearance(Object *signature_field, SignatureSignerInf
   obj1.arrayAdd(obj2.initReal(0));
   obj1.arrayAdd(obj2.initReal(0));
   obj1.arrayAdd(obj2.initReal(rect_x));
-  obj1.arrayAdd(obj2.initReal(horizontal ? rect_height : rect_y));
+  obj1.arrayAdd(obj2.initReal(horizontal ? (height) : rect_y));
   appearance_obj.dictAdd(copyString("BBox"), &obj1);
   appearance_obj.dictAdd(copyString("Length"),
                          obj1.initInt(ap_command_toplevel.getLength()));
@@ -1359,7 +1379,7 @@ void Catalog::addSignatureAppearanceSCAP(Object *signature_field, SignatureSigne
   int linesLocation = 0;
 
   //Start with Italics font
-  GooString *n2_commands = GooString::format(commands_template.c_str(), rect_height - 10, (int)font_size);
+  GooString *n2_commands = GooString::format(commands_template.c_str(), rect_height + rect_y - 10, (int)font_size);
 
   if (!small_signature_format && reason != NULL && strlen(reason) > 0)
   {
@@ -1562,7 +1582,8 @@ void Catalog::addSignatureAppearanceSCAP(Object *signature_field, SignatureSigne
   resources.dictAdd(copyString("ProcSet"), &procset);
 
   xobject_layers.initDict(xref);
-  Ref n2_layer = newXObject(n2_commands->getCString(), rotate_signature ? rect_y : rect_x, rotate_signature ? rect_x : rect_y,
+  Ref n2_layer = newXObject(n2_commands->getCString(), rotate_signature ? rect_y : rect_x, rotate_signature ? rect_x : horizontal ? rect_height + rect_y
+                                                                                                                                  : rect_y,
                             true, true, img_data, img_length);
   ref_to_n2.initRef(n2_layer.num, n2_layer.gen);
   xobject_layers.dictAdd(copyString("n2"), &ref_to_n2);
@@ -1583,7 +1604,7 @@ void Catalog::addSignatureAppearanceSCAP(Object *signature_field, SignatureSigne
   obj1.arrayAdd(obj2.initReal(0));
   obj1.arrayAdd(obj2.initReal(0));
   obj1.arrayAdd(obj2.initReal(rect_x));
-  obj1.arrayAdd(obj2.initReal(horizontal ? rect_height : rect_y));
+  obj1.arrayAdd(obj2.initReal(horizontal ? rect_height + rect_y : rect_y));
   appearance_obj.dictAdd(copyString("BBox"), &obj1);
   appearance_obj.dictAdd(copyString("Length"),
                          obj1.initInt(ap_command_toplevel.getLength()));

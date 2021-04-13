@@ -1000,7 +1000,7 @@ void PDFDoc::prepareTimestamp()
     Ref *firstPageRef = getCatalog()->getPageRef(1);
     Object signatureField, timestampRefObj;
     signatureField.initDict(xref);
-    getCatalog()->fillSignatureField(&signatureField, NULL, 0, firstPageRef);
+    getCatalog()->fillSignatureField(&signatureField, NULL, 0, firstPageRef, 0);
     timestampRefObj.initRef(timestampRef.num, timestampRef.gen);
     signatureField.dictAdd(copyString("V"), &timestampRefObj);
     Ref sigFieldRef = xref->addIndirectObject(&signatureField);
